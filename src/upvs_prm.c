@@ -5,7 +5,7 @@
 //const param_t axOriginList[UPVS_PARAM_LIST_LEN];
 param_t axOriginList[UPVS_PARAM_LIST_LEN];
 
-// Функции записи в поле "значение" параметра
+// Р¤СѓРЅРєС†РёРё Р·Р°РїРёСЃРё РІ РїРѕР»Рµ "Р·РЅР°С‡РµРЅРёРµ" РїР°СЂР°РјРµС‚СЂР°
 static s32_t set(value_t *, value_ptr_t *, bool);
 static s32_t set_b(value_t *, bool, bool);
 static s32_t set_sl(value_t *, s32_t, bool);
@@ -13,10 +13,10 @@ static s32_t set_f(value_t *, float, bool);
 static s32_t set_all(value_t *, bool, bool);
 static s32_t set_str(value_t *, const u8_t *, bool);
 
-// Константы
-static const char* pcText = "АО";
+// РљРѕРЅСЃС‚Р°РЅС‚С‹
+static const char* pcText = "РђРћ";
 
-// Функции, доступные извне
+// Р¤СѓРЅРєС†РёРё, РґРѕСЃС‚СѓРїРЅС‹Рµ РёР·РІРЅРµ
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
@@ -41,18 +41,18 @@ int
   
   if (!self) return -1;
   
-  // FIXME убрать после доб upvs_param_list.c
+  // FIXME СѓР±СЂР°С‚СЊ РїРѕСЃР»Рµ РґРѕР± upvs_param_list.c
   memset((void *)axOriginList, 0, UPVS_PARAM_LIST_LEN * sizeof(param_t));
   
   for (i=0; i<UPVS_PARAM_LIST_LEN; i++) {
-    memcpy( (void *)(self->paxList+i),       // dest в области .heap
-            (const void *)&axOriginList[i], // src в области .data
+    memcpy( (void *)(self->paxList+i),       // dest РІ РѕР±Р»Р°СЃС‚Рё .heap
+            (const void *)&axOriginList[i], // src РІ РѕР±Р»Р°СЃС‚Рё .data
             sizeof(param_t) );              // size = n*sizeof(struct)
   }
   
-  // копируем список параметров из переменной в области .data в .heap
-  // memcpy( (void *)self->axList,         // dest в области .heap
-          // (const void *)axOriginList,   // src в области .data
+  // РєРѕРїРёСЂСѓРµРј СЃРїРёСЃРѕРє РїР°СЂР°РјРµС‚СЂРѕРІ РёР· РїРµСЂРµРјРµРЅРЅРѕР№ РІ РѕР±Р»Р°СЃС‚Рё .data РІ .heap
+  // memcpy( (void *)self->axList,         // dest РІ РѕР±Р»Р°СЃС‚Рё .heap
+          // (const void *)axOriginList,   // src РІ РѕР±Р»Р°СЃС‚Рё .data
           // sizeof(axOriginList) );       // size = n*sizeof(struct)
   
   return 0;
@@ -89,23 +89,23 @@ int
   int i=0;
   //upvs_param_t *px = upvs_param__inst();
 
-  // проверка
+  // РїСЂРѕРІРµСЂРєР°
   if (!psrc) return -1;
 
-  // бегунок по элементам массива пока поле pcTopic не нуль
+  // Р±РµРіСѓРЅРѕРє РїРѕ СЌР»РµРјРµРЅС‚Р°Рј РјР°СЃСЃРёРІР° РїРѕРєР° РїРѕР»Рµ pcTopic РЅРµ РЅСѓР»СЊ
   do {
-    // В случае совпадания полного пути:
+    // Р’ СЃР»СѓС‡Р°Рµ СЃРѕРІРїР°РґР°РЅРёСЏ РїРѕР»РЅРѕРіРѕ РїСѓС‚Рё:
     // FIXME
     if (!strcmp( (const char *)self->paxList[i].pcTopic,
                  (const char *)psrc->pcTopic ))
     {
-      // Проверяем соответствие имени в полях ключа и полного пути...
+      // РџСЂРѕРІРµСЂСЏРµРј СЃРѕРѕС‚РІРµС‚СЃС‚РІРёРµ РёРјРµРЅРё РІ РїРѕР»СЏС… РєР»СЋС‡Р° Рё РїРѕР»РЅРѕРіРѕ РїСѓС‚Рё...
       //if (strcmp(px[i].pcName, (const char *)psrc->pcName)) return -1;
-      // ... и записываем новое значение.
+      // ... Рё Р·Р°РїРёСЃС‹РІР°РµРј РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ.
       return set( &(self->paxList[i].xValue), &(psrc->xValue), changes );
     }
     i++;
-  } while (self->paxList[i].pcName); //FIXME было pcTopic
+  } while (self->paxList[i].pcName); //FIXME Р±С‹Р»Рѕ pcTopic
 
   return -1;
 }
@@ -151,10 +151,10 @@ s32_t
 s32_t
 	upvs_prm__get_b(param_t *px, bool *parg) {
 /*----------------------------------------------------------------------------*/  
-  // проверка аргументов
+  // РїСЂРѕРІРµСЂРєР° Р°СЂРіСѓРјРµРЅС‚РѕРІ
   if (!px) { *parg = false; return -1; }
   if (px->xValue.type != BOOL) { *parg = false; return -1; }
-  // получение
+  // РїРѕР»СѓС‡РµРЅРёРµ
   *parg = px->xValue.mag.b;
   return 0;
 }
@@ -164,10 +164,10 @@ s32_t
 s32_t
 	upvs_prm__get_sl(param_t *px, s32_t *parg) {
 /*----------------------------------------------------------------------------*/
-	// проверка аргументов
+	// РїСЂРѕРІРµСЂРєР° Р°СЂРіСѓРјРµРЅС‚РѕРІ
   if (!px) { *parg = 0; return -1; }
   if (px->xValue.type != INT32) { *parg = 0; return -1; }
-  // получение
+  // РїРѕР»СѓС‡РµРЅРёРµ
   *parg = px->xValue.mag.sl;
   return 0;
 }
@@ -177,18 +177,18 @@ s32_t
 s32_t
 	upvs_prm__get_f(param_t *px, f32_t *parg) {
 /*----------------------------------------------------------------------------*/
-  // проверка аргументов
+  // РїСЂРѕРІРµСЂРєР° Р°СЂРіСѓРјРµРЅС‚РѕРІ
   if (!px) { *parg = 0.0f; return -1; }
   if (px->xValue.type != FLOAT) { *parg = 0.0f; return -1; }
-  // получение
+  // РїРѕР»СѓС‡РµРЅРёРµ
   *parg = px->xValue.mag.f;
   return 0;
 }
 
 /**	----------------------------------------------------------------------------
-	* @brief Возвращает строковое представление типа
-	* @param code: Код типа в числовом представлении
-	* @retval Указатель на строку */
+	* @brief Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃС‚СЂРѕРєРѕРІРѕРµ РїСЂРµРґСЃС‚Р°РІР»РµРЅРёРµ С‚РёРїР°
+	* @param code: РљРѕРґ С‚РёРїР° РІ С‡РёСЃР»РѕРІРѕРј РїСЂРµРґСЃС‚Р°РІР»РµРЅРёРё
+	* @retval РЈРєР°Р·Р°С‚РµР»СЊ РЅР° СЃС‚СЂРѕРєСѓ */
 u32_t
   upvs_prm__enc_type(const u8_t *pstr) {
 /*----------------------------------------------------------------------------*/
@@ -212,7 +212,7 @@ u32_t
   return code;
 }
 
-// Функции, ограниченные областью видимости данного файла
+// Р¤СѓРЅРєС†РёРё, РѕРіСЂР°РЅРёС‡РµРЅРЅС‹Рµ РѕР±Р»Р°СЃС‚СЊСЋ РІРёРґРёРјРѕСЃС‚Рё РґР°РЅРЅРѕРіРѕ С„Р°Р№Р»Р°
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
@@ -220,9 +220,9 @@ static s32_t
   set(value_t *pDest, value_ptr_t *pSrc, bool changes) {
 /*----------------------------------------------------------------------------*/
   s32_t rc = 0;
-  // проверка аргументов
+  // РїСЂРѕРІРµСЂРєР° Р°СЂРіСѓРјРµРЅС‚РѕРІ
   if ((!pDest) || (!pSrc)) return -1;
-  // ориентируясь на 'type', получаем значение
+  // РѕСЂРёРµРЅС‚РёСЂСѓСЏСЃСЊ РЅР° 'type', РїРѕР»СѓС‡Р°РµРј Р·РЅР°С‡РµРЅРёРµ
   switch (pSrc->type) {
     case BOOL: rc = set_b(pDest, pSrc->mag.b, changes); break;
     case INT32: rc = set_sl(pDest, pSrc->mag.sl, changes); break;
@@ -240,15 +240,15 @@ static s32_t
 static s32_t
 	set_b(value_t *px, bool var, bool changes) {
 /*----------------------------------------------------------------------------*/
-/* 	// проверка аргументов
+	// РїСЂРѕРІРµСЂРєР° Р°СЂРіСѓРјРµРЅС‚РѕРІ
   if (!px) return -1;
   if (px->type != BOOL) return -1;
-  // отслеживание изменений
+  // РѕС‚СЃР»РµР¶РёРІР°РЅРёРµ РёР·РјРµРЅРµРЅРёР№
   if (changes) {
     (px->mag.b != var) ? (px->bNew = true) : (px->bNew = false); 
   }
-  // запись
-  px->mag.b = var; */
+  // Р·Р°РїРёСЃСЊ
+  px->mag.b = var;
   return 0;
 }
 
@@ -257,15 +257,15 @@ static s32_t
 static s32_t
 	set_sl(value_t *px, s32_t var, bool changes) {
 /*----------------------------------------------------------------------------*/
-/* 	// проверка аргументов
+ 	// РїСЂРѕРІРµСЂРєР° Р°СЂРіСѓРјРµРЅС‚РѕРІ
   if (!px) return -1;
   if (px->type != INT32) return -1;
-  // отслеживание изменений
+  // РѕС‚СЃР»РµР¶РёРІР°РЅРёРµ РёР·РјРµРЅРµРЅРёР№
   if (changes) {
     (px->mag.sl != var) ? (px->bNew = true) : (px->bNew = false); 
   }
-  // запись
-  px->mag.sl = var; */
+  // Р·Р°РїРёСЃСЊ
+  px->mag.sl = var;
   return 0;
 }
 
@@ -274,15 +274,15 @@ static s32_t
 static s32_t
 	set_f(value_t *px, f32_t var, bool changes) {
 /*----------------------------------------------------------------------------*/
-/* 	// проверка аргументов
+ 	// РїСЂРѕРІРµСЂРєР° Р°СЂРіСѓРјРµРЅС‚РѕРІ
   if (!px) return -1;
   if (px->type != FLOAT) return -1;
-  // отслеживание изменений
+  // РѕС‚СЃР»РµР¶РёРІР°РЅРёРµ РёР·РјРµРЅРµРЅРёР№
   if (changes) {
     (px->mag.f != var) ? (px->bNew = true) : (px->bNew = false); 
   }
-  // запись
-  px->mag.f = var; */
+  // Р·Р°РїРёСЃСЊ
+  px->mag.f = var;
   return 0;
 }
 
@@ -291,15 +291,15 @@ static s32_t
 static s32_t
 	set_all(value_t *px, bool var, bool changes) {
 /*----------------------------------------------------------------------------*/
-/* 	// проверка аргументов
+ 	// РїСЂРѕРІРµСЂРєР° Р°СЂРіСѓРјРµРЅС‚РѕРІ
   if (!px) return -1;
   if (px->type != GETALL) return -1;
-  // отслеживание изменений
+  // РѕС‚СЃР»РµР¶РёРІР°РЅРёРµ РёР·РјРµРЅРµРЅРёР№
   if (changes) {
     (px->mag.b != var) ? (px->bNew = true) : (px->bNew = false); 
   }
-  // запись
-  px->mag.b = var; */
+  // Р·Р°РїРёСЃСЊ
+  px->mag.b = var;
   return 0;
 }
 
@@ -308,16 +308,16 @@ static s32_t
 static s32_t
 	set_str(value_t *px, const u8_t *var, bool changes) {
 /*----------------------------------------------------------------------------*/
-/* 	// проверка аргументов
+ 	// РїСЂРѕРІРµСЂРєР° Р°СЂРіСѓРјРµРЅС‚РѕРІ
   if (!px) return -1;
   if (px->type != STRING) return -1;
-  // отслеживание изменений
+  // РѕС‚СЃР»РµР¶РёРІР°РЅРёРµ РёР·РјРµРЅРµРЅРёР№
   if (changes) {
     (strcmp((const char *)px->mag.ac, (const char *)var) != NULL) ?
       (px->bNew = true) : (px->bNew = false); 
   }
-  // запись
-  strcpy((char *)px->mag.ac, (const char *)var); */
+  // Р·Р°РїРёСЃСЊ
+  strcpy((char *)px->mag.ac, (const char *)var);
   return 0;
 }
 
