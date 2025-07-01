@@ -24,7 +24,7 @@ typedef struct {
 
 typedef struct {
   struct {
-    // аварийные данные
+    // Р°РІР°СЂРёР№РЅС‹Рµ РґР°РЅРЅС‹Рµ
     int code;
     int priority;
     u8_t* pcDescribe;
@@ -32,7 +32,7 @@ typedef struct {
     u8_t* pcHelp;
   } err;
   struct {
-    // Буферы динамич. текста
+    // Р‘СѓС„РµСЂС‹ РґРёРЅР°РјРёС‡. С‚РµРєСЃС‚Р°
     u8_t acDescr[128];
     u8_t acHelp[512];
   } dyn_buf;
@@ -41,27 +41,27 @@ typedef struct {
 typedef s32_t (*dyntext_fn_t)(u8_t *, u32_t, const u8_t *);
 
 typedef struct {
-  // Код
+  // РљРѕРґ
   int code;
-  // Приоритет
+  // РџСЂРёРѕСЂРёС‚РµС‚
   int priority;
-  // Неисправность
+  // РќРµРёСЃРїСЂР°РІРЅРѕСЃС‚СЊ
   //char* pcName;
-  // Краткое описание для машиниста
+  // РљСЂР°С‚РєРѕРµ РѕРїРёСЃР°РЅРёРµ РґР»СЏ РјР°С€РёРЅРёСЃС‚Р°
   u8_t* pcDescribe;
-  // Влияние на работу
+  // Р’Р»РёСЏРЅРёРµ РЅР° СЂР°Р±РѕС‚Сѓ
   u8_t* pcInfluence;
-  // Помощь для ПЭМа
+  // РџРѕРјРѕС‰СЊ РґР»СЏ РџР­РњР°
   u8_t* pcHelp;
-  // доп.функционал
+  // РґРѕРї.С„СѓРЅРєС†РёРѕРЅР°Р»
   dyntext_fn_t pvDynDesc;
   dyntext_fn_t pvDynHelp;
 } upvs_errdesc_t;
 
 typedef struct {
-  // аварийные записи
+  // Р°РІР°СЂРёР№РЅС‹Рµ Р·Р°РїРёСЃРё
   err_item_t     axItems[ITEMS_LENGHT];
-  // указатель на аварию в контексте текущего обмена по modbus tcp
+  // СѓРєР°Р·Р°С‚РµР»СЊ РЅР° Р°РІР°СЂРёСЋ РІ РєРѕРЅС‚РµРєСЃС‚Рµ С‚РµРєСѓС‰РµРіРѕ РѕР±РјРµРЅР° РїРѕ modbus tcp
   u32_t          ulIdx;
   upvs_err_buf_t xErrBuf;
   upvs_errdesc_t const *paxDesc;
