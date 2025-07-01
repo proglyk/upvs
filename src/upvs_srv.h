@@ -4,6 +4,16 @@
 #include "upvs_conf.h"
 #include "upvs_prm.h"
 #include "upvs_err.h"
+#include "upvs_mqtt_srv.h"
+#include "FreeRTOS.h"
+#include "timers.h"
+
+// Connection context
+struct conn_cxt_st {
+  s32_t        slSock;  // Сокет подключения
+  mqtt_srv_t  *pxMqtt;  // Экземпляр сервера MQTT
+  xTimerHandle xTimer;  // программный таймер для исходящих сообщ
+};
 
 typedef struct {
   bool bActive;
