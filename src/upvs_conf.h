@@ -18,4 +18,6 @@
 #define INFL_LENGHT  ( 256UL) // или 128 симв. UTF-8
 #define HELP_LENGHT  (1024UL) // или 512 (4x128) симв. UTF-8
 
+#define MQTT_BUFSIZE                    2048
+
 #endif //_UPVS_CONF_H_
