@@ -13,9 +13,6 @@ static s32_t set_f(value_t *, float, bool);
 static s32_t set_all(value_t *, bool, bool);
 static s32_t set_str(value_t *, const u8_t *, bool);
 
-// Константы
-static const char* pcText = "АО";
-
 // Функции, доступные извне
 
 /**	----------------------------------------------------------------------------
