@@ -1,7 +1,7 @@
 #ifndef _UPVS_SRV_SESS3_H_
 #define _UPVS_SRV_SESS3_H_
 
-#include "mqtt_srv2.h"
+#include "upvs_mqtt_srv.h"
 #include "FreeRTOS.h"
 #include "timers.h"
 

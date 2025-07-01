@@ -1,7 +1,7 @@
 #ifndef _UPVS_PRM_H_
 #define _UPVS_PRM_H_
 
-#include "upvs_config2.h"
+#include "upvs_conf.h"
 #include "userint.h"
 #include <stdbool.h>
 

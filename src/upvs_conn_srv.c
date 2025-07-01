@@ -1,4 +1,4 @@
-#include "upvs_config2.h"
+#include "upvs_conf.h"
 #include "upvs_conn_srv.h"
 #include "lwip/err.h"
 #include "net_if.h"

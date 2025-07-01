@@ -3,10 +3,12 @@
 
 #include "upvs_conf.h"
 #include "upvs_prm.h"
+#include "upvs_err.h"
 
 typedef struct {
   bool bActive;
-  upvs_param_t *pxParam;
+  upvs_param_t *pxPrm;
+  upvs_err_t   *pxErr;
 } upvs_srv_t;
 
 void *upvs_srv__create(void);

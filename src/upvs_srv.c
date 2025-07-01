@@ -4,6 +4,10 @@
 #include <string.h>
 #include "dbg.h"
 
+// extern 
+extern s32_t upvs_err__add_item(err_cell_t *, u32_t, bool, s32_t);
+
+// static
 static int prm_set( upvs_srv_t *, parser_t *, const u8_t * );
 static int error_set( const u8_t * );
 static s32_t error_remove(s32_t);
@@ -19,8 +23,8 @@ void *
   upvs_srv_t *self = malloc(sizeof(upvs_srv_t));
   if (!self) return NULL;
   
-  self->pxParam = upvs_prm__create();
-  if (!self->pxParam) return NULL;
+  self->pxPrm = upvs_prm__create();
+  if (!self->pxPrm) return NULL;
   
   return (void *)self;
 }
@@ -32,7 +36,7 @@ int
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
   
-  if (upvs_prm__init(self->pxParam) < 0) return -1;
+  if (upvs_prm__init(self->pxPrm) < 0) return -1;
   
   return 0;
 }
@@ -43,9 +47,9 @@ void
   upvs_srv__del(upvs_srv_t *self) {
 /*----------------------------------------------------------------------------*/
   if (!self) return;
-  if (!self->pxParam) return;
+  if (!self->pxPrm) return;
   
-  upvs_prm__del(self->pxParam);
+  upvs_prm__del(self->pxPrm);
   free(self);
 }
 
@@ -153,7 +157,7 @@ param_t *
 /*----------------------------------------------------------------------------*/
   if (!self) return NULL;
   if (!self->bActive) return NULL;
-  return upvs_prm__get_item(self->pxParam, idx);
+  return upvs_prm__get_item(self->pxPrm, idx);
 }
 
 /**	----------------------------------------------------------------------------
@@ -163,7 +167,7 @@ s32_t
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
   if (!self->bActive) return -1;
-  return (upvs_prm__set_b(upvs_prm__get_item(self->pxParam, idx), var, ch));
+  return (upvs_prm__set_b(upvs_prm__get_item(self->pxPrm, idx), var, ch));
 }
 
 /**	----------------------------------------------------------------------------
@@ -173,7 +177,7 @@ s32_t
 /*----------------------------------------------------------------------------*/
   if (!self) return -1; 
   if (!self->bActive) return -1;
-  return (upvs_prm__set_sl(upvs_prm__get_item(self->pxParam, idx), var, ch));
+  return (upvs_prm__set_sl(upvs_prm__get_item(self->pxPrm, idx), var, ch));
 }
 
 /**	----------------------------------------------------------------------------
@@ -183,7 +187,7 @@ s32_t
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
   if (!self->bActive) return -1;
-  return (upvs_prm__set_f(upvs_prm__get_item(self->pxParam, idx), var, ch));
+  return (upvs_prm__set_f(upvs_prm__get_item(self->pxPrm, idx), var, ch));
 }
 
 /**	----------------------------------------------------------------------------
@@ -193,7 +197,7 @@ s32_t
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
   if (!self->bActive) return -1;
-  return (upvs_prm__set_all(upvs_prm__get_item(self->pxParam, idx), var, ch));
+  return (upvs_prm__set_all(upvs_prm__get_item(self->pxPrm, idx), var, ch));
 }
 
 /**	----------------------------------------------------------------------------
@@ -203,7 +207,7 @@ s32_t
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
   if (!self->bActive) return -1;
-  return (upvs_prm__get_b(upvs_prm__get_item(self->pxParam, idx), parg));
+  return (upvs_prm__get_b(upvs_prm__get_item(self->pxPrm, idx), parg));
 }
 
 /**	----------------------------------------------------------------------------
@@ -213,7 +217,7 @@ s32_t
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
   if (!self->bActive) return -1;
-  return (upvs_prm__get_sl(upvs_prm__get_item(self->pxParam, idx), parg));
+  return (upvs_prm__get_sl(upvs_prm__get_item(self->pxPrm, idx), parg));
 }
 
 /**	----------------------------------------------------------------------------
@@ -223,7 +227,7 @@ s32_t
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
   if (!self->bActive) return -1;
-  return (upvs_prm__get_f(upvs_prm__get_item(self->pxParam, idx), parg));
+  return (upvs_prm__get_f(upvs_prm__get_item(self->pxPrm, idx), parg));
 }
 
 
@@ -254,7 +258,7 @@ static int
   // записываем адрес массива для дальнейшего использования
   pxPrs->xParam.pcTopic = pxPrs->acTopic;
   // осуществляем поиск параметра по имени и записываем новое значение
-  rc = upvs_prm__set( self->pxParam, &(pxPrs->xParam), false );
+  rc = upvs_prm__set( self->pxPrm, &(pxPrs->xParam), false );
   //if (rc) goto exit;
   
   exit:
