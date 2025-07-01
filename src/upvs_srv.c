@@ -5,14 +5,14 @@
 #include "dbg.h"
 
 // extern 
-extern s32_t upvs_err__add_item(err_cell_t *, u32_t, bool, s32_t);
+//extern s32_t upvs_err__add_item(err_cell_t *, u32_t, bool, s32_t);
 
 // static
-static int prm_set( upvs_srv_t *, parser_t *, const u8_t * );
-static int error_set( const u8_t * );
-static s32_t error_remove(s32_t);
-static s32_t error_insert(cJSON *root, s32_t);
-static s32_t error_update(s32_t idx, const u8_t *pBuf);
+static int param_set( upvs_srv_t *, parser_t *, const u8_t * );
+static int error_set( upvs_srv_t *, const u8_t * );
+static s32_t error_remove(upvs_srv_t *, s32_t);
+static s32_t error_insert(upvs_srv_t *, cJSON *root, s32_t);
+static s32_t error_update(upvs_srv_t *, s32_t idx, const u8_t *pBuf);
 static int pvs_value_typecast(struct cJSON *, value_ptr_t *);
 
 /**	----------------------------------------------------------------------------
@@ -57,10 +57,11 @@ void
 	* @brief ???
 	* @retval —татус выполнени€ */
 s32_t
-	upvs_srv__get(u32_t item, u8_t *pPath, u8_t *pValue, u32_t value_len) {
+	upvs_srv__get( upvs_srv_t *self, u32_t item, u8_t *pPath, u8_t *pValue, 
+                 u32_t value_len ) {
 /*----------------------------------------------------------------------------*/
-  /*cJSON* root = NULL;
-  upvs_param_t *pax;
+  cJSON* root = NULL;
+  param_t *prm;
   bool rc;
   s32_t sta;
   //
@@ -70,18 +71,20 @@ s32_t
    // проверка арг-ов
   if (!pPath || !pValue) return -1;
   // ук-тель на параметром с индексом item
-  pax = (upvs_param_t *)(upvs_param__inst() + item);
-  if (!pax) return -1;
+  //pax = (upvs_param_t *)(upvs_param__inst() + item);
+  prm = upvs_prm__get_item(self->pxPrm, item);
+  if (!prm) return -1;
   // формируем json
   root = cJSON_CreateObject();
   if (!root) return -1;
   
   // ѕолучаем значение в зависимости от типа 'type' параметра 
-  switch (pax->xValue.type) {
+  switch (prm->xValue.type) {
     case (BOOL):
-      sta = upvs_param__get_b(pax, &bVar);
+      //sta = upvs_param__get_b(prm, &bVar);
+      sta = upvs_prm__get_b( prm, &bVar );
       if (sta != -1) {
-        cJSON_AddItemToObject( root, (const char *)pax->pcName, 
+        cJSON_AddItemToObject( root, (const char *)prm->pcName, 
                                cJSON_CreateBool(bVar) );
         // ѕосле чего формируем json-строку { "some_key": some_value } сразу во
         // внешний буфер
@@ -90,9 +93,10 @@ s32_t
       }
     break;
     case (FLOAT):
-      sta = upvs_param__get_f(pax, &fVar);
+      //sta = upvs_param__get_f(prm, &fVar);
+      sta = upvs_prm__get_f(prm, &fVar);
       if (sta != -1) {
-        cJSON_AddItemToObject( root, (const char *)pax->pcName, 
+        cJSON_AddItemToObject( root, (const char *)prm->pcName, 
                                cJSON_CreateFloat(fVar) );
         // ѕосле чего формируем json-строку { "some_key": some_value } сразу во
         // внешний буфер
@@ -101,7 +105,7 @@ s32_t
       }
     break;
     case (GETALL):
-      strcpy((char *)pValue, (const char *)pax->pcName);
+      strcpy((char *)pValue, (const char *)prm->pcName);
     break;
     case (DATETIME):
       //FIXME
@@ -112,15 +116,15 @@ s32_t
   }
 
   // pcTitle
-  strcpy((char *)pPath, (const char *)pax->pcTopic);
+  strcpy((char *)pPath, (const char *)prm->pcTopic);
   
-	//cJSON_Delete(root);*/
+	//cJSON_Delete(root);
   return 0;
   
-  /* errexit:
+  errexit:
   if (!root)
     cJSON_Delete(root);
-  return rc; */
+  return rc;
 }
 
 /**	----------------------------------------------------------------------------
@@ -142,9 +146,9 @@ int
   // 3. определить тип данных:
   // 3.1 авари€
   if ( !strcmp((const void *)xParser.acTopic, pcErrorPath) ) {
-    rc = error_set( pcPld );
+    rc = error_set( self, pcPld );
   } else {
-    rc = prm_set( self, &xParser, pcPld );
+    rc = param_set( self, &xParser, pcPld );
   }
   
   return rc;
@@ -236,7 +240,7 @@ s32_t
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 static int
-  prm_set( upvs_srv_t *self, parser_t *pxPrs, const u8_t *pPld) {
+  param_set( upvs_srv_t *self, parser_t *pxPrs, const u8_t *pPld) {
 /*----------------------------------------------------------------------------*/
   cJSON *root;
   //static parser_t xParser;
@@ -273,17 +277,18 @@ static int
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 static int
-  error_set( const u8_t *pcPld ) {
+  error_set( upvs_srv_t *self, const u8_t *pcPld ) {
 /*----------------------------------------------------------------------------*/
   s32_t rc = 0;
-  /*cJSON *root;
+  cJSON *root;
 	bool active;
 	s32_t code;
 	
 	s32_t idx;
 	//static u8_t acBuffer[HELP_LENGHT]; // под времен. размещ. содержимого Help
-	upvs_err_db_t *pPoll = upvs_err__db_inst();
-	if ( !pcPld ) goto exit;
+	//upvs_err_db_t *pPoll = upvs_err__db_inst();
+	
+  if ( !pcPld ) goto exit;
   
   // парсим пришедшую json-строку и заполн€ем объект "root", представл€ющий 
   // собой св€зный список, содержащий строки
@@ -302,7 +307,7 @@ static int
 		goto exit;
 	active = (bool)root->child->next->valueint;
 
-  idx = upvs_err__get_cell_id(pPoll, code);
+  idx = upvs_err__get_item_idx(self->pxErr, code);
 	// если авари€ с данными кодом и значением ранее были зафиксированы
   if (idx >= 0) {
 		// провер€ем статус 'active' нового сообщени€
@@ -317,11 +322,11 @@ static int
       //strcpy((void *)acBuffer, 
       //  (const void *)root->child->next->next->next->next->next->valuestring);
       //провер€ем соответствие Help
-			if (!upvs_err__is_help_equal( pPoll, idx,
+			if (!upvs_err__is_help_equal( self->pxErr, idx,
         (const u8_t *)root->child->next->next->next->next->next->valuestring ))
       {
 				// ≈сли различаютс€, то обновл€ем
-				rc = error_update( idx,
+				rc = error_update( self, idx,
           (const u8_t *)root->child->next->next->next->next->next->valuestring );
 			} else {
 				// ≈сли же help равны, то ничего не делаем
@@ -329,13 +334,13 @@ static int
 			}
 		} else {
 			// ≈сли запись уже есть то эту запись удал€ем
-			rc = error_remove(idx);
+			rc = error_remove(self, idx);
 		}
   }	else {
 		// снова провер€ем статус 'active'
 		if (active) {
 			// вставл€ем новую запись
-			rc = error_insert(root, code);
+			rc = error_insert(self, root, code);
 		} else {
 			// или ничего не делаем
 			asm("nop");
@@ -343,28 +348,29 @@ static int
 	}
 
   // удал€ем объект
-  cJSON_Delete(root);*/
+  cJSON_Delete(root);
   return rc;
   
-  /*exit:
+  exit:
   DBG_PRINT( NET_DEBUG, ("Error while parsing JSON, "      \
     "in '%s' /UPVS/upvs_srv.c:%d\r\n", __FUNCTION__, __LINE__) );
   cJSON_Delete(root);
-  return -1;*/
+  return -1;
 }
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 static s32_t
-  error_insert(cJSON *root, s32_t code) {
+  error_insert( upvs_srv_t *self, cJSON *root, s32_t code ) {
 /*----------------------------------------------------------------------------*/
-  /*s32_t idx;
-  upvs_err_cell_t *pcell;
-  upvs_err_db_t *pPoll = upvs_err__db_inst();
+  s32_t idx;
+  err_item_t *item; //upvs_err_cell_t *pcell;
+  //upvs_err_db_t *pPoll = upvs_err__db_inst();
+  //prm = upvs_prm__get_item(self->pxPrm, item);
   if (!root) goto exit;
   
   // получаем индекс пустой записи в журнале. Ѕудем записывать в неЄ данные
-  idx = upvs_err__db_get_free_pos(pPoll);
+  idx = upvs_err__get_free_pos(self->pxErr);
   if (idx < 0) {
     DBG_PRINT( NET_DEBUG, ("Can't get free pos for Error '%d', in '%s' "  \
       "/UPVS/upvs_srv.c:%d\r\n", code, __FUNCTION__, __LINE__) );
@@ -372,36 +378,39 @@ static s32_t
   }
   
   // берЄм ссылку на место под запись
-  pcell = (pPoll->axCells + idx);
+  //pcell = (pPoll->axCells + idx);
+  item = upvs_err__get_item(self->pxErr, idx);
+  if (!item) goto exit;
+  
   // записываем 'code', 'status'
-  pcell->code = code;
-  pcell->status = (s32_t)true;
+  item->ulCode = code;
+  item->bActive = (s32_t)true;
   
   // берЄм и записываем "priority"
   if (!root->child->next->next) goto exit;
   if (strcmp((const void *)root->child->next->next->string, "priority") != 0) 
     goto exit;
-  pcell->priority = root->child->next->next->valueint;
+  item->ulPrio = root->child->next->next->valueint;
 
   // берЄм и записываем "describe"
   if (!root->child->next->next->next) goto exit;
   if (strcmp((const void *)root->child->next->next->next->string, "describe") != 0) 
     goto exit;
-  strcpy((void *)pcell->acDesc, 
+  strcpy((void *)item->acDesc, 
     (const void *)root->child->next->next->next->valuestring);
     
   // берЄм и записываем "influence"
   if (!root->child->next->next->next->next) goto exit;
   if (strcmp((const void *)root->child->next->next->next->next->string, "influence") != 0) 
     goto exit;
-  strcpy((void *)pcell->acInfl, 
+  strcpy((void *)item->acInfl, 
     (const void *)root->child->next->next->next->next->valuestring);
 
   // берЄм и записываем "help"
   if (!root->child->next->next->next->next->next) goto exit;
   if (strcmp((const void *)root->child->next->next->next->next->next->string, "help") != 0) 
     goto exit;
-  strcpy((void *)pcell->acHelp, 
+  strcpy((void *)item->acHelp, 
     (const void *)root->child->next->next->next->next->next->valuestring);
   
   return 0;
@@ -409,26 +418,25 @@ static s32_t
   exit:
   DBG_PRINT( NET_DEBUG, ("Error while parsing JSON, "      \
     "in '%s' /UPVS/upvs_srv.c:%d\r\n", __FUNCTION__, __LINE__) );
-  return -1;*/ return 0;
+  return -1;
 }
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 static s32_t
-  error_remove(s32_t idx) {
+  error_remove(upvs_srv_t *self, s32_t idx) {
 /*----------------------------------------------------------------------------*/
-  /*upvs_err_cell_t *pcell;
-  upvs_err_db_t *pPoll = upvs_err__db_inst();
+  err_item_t *item;
     
   // берЄм ссылку на место под запись
-  pcell = (pPoll->axCells + idx);
+  item = upvs_err__get_item(self->pxErr, idx);
   // занул€ем пол€
-  pcell->code = 0;
-  pcell->priority = 0;
-  pcell->status = 0;
-  memset((void *)pcell->acDesc, 0, sizeof(pcell->acDesc));
-  memset((void *)pcell->acInfl, 0, sizeof(pcell->acInfl));
-  memset((void *)pcell->acHelp, 0, sizeof(pcell->acHelp));*/
+  item->ulCode = 0;
+  item->ulPrio = 0;
+  item->bActive = 0;
+  memset((void *)item->acDesc, 0, sizeof(item->acDesc));
+  memset((void *)item->acInfl, 0, sizeof(item->acInfl));
+  memset((void *)item->acHelp, 0, sizeof(item->acHelp));
   
   return 0;
 }
@@ -436,16 +444,14 @@ static s32_t
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 static s32_t
-  error_update(s32_t idx, const u8_t *pBuf) {
+  error_update(upvs_srv_t *self, s32_t idx, const u8_t *pBuf) {
 /*----------------------------------------------------------------------------*/
-  /*upvs_err_cell_t *pcell;
-  upvs_err_db_t *pPoll = upvs_err__db_inst();
-  
-  // берЄм ссылку на место под запись
-  pcell = (pPoll->axCells + idx);
+  err_item_t *item;
 
+  // берЄм ссылку на место под запись
+  item = upvs_err__get_item(self->pxErr, idx);
   // записываем "help"
-  strcpy((void *)pcell->acHelp, (const void *)pBuf);*/
+  strcpy((void *)item->acHelp, (const void *)pBuf);
   
   return 0;
 }
