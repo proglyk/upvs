@@ -10,7 +10,7 @@
 #define DECODER_BUFSIZE_RX              (2048UL)
 #define DECODER_BUFSIZE_TX              ( 256UL)
 
-#define ERR_CAPACITY                    (10UL)
+#define ITEMS_LENGHT                    (10UL)
 
 // Размеры промежуточного буфера аварий. для upvs_err.h
 // размеры массивов соответствуют таковым в таблицах 2..7 Протокола ПК-ПИ396
