@@ -24,7 +24,7 @@
 // ack flags
 #define SUB_ACK_FAIL				            (80)
 
-// Директивы Message types
+// Р”РёСЂРµРєС‚РёРІС‹ Message types
 
 #define CONNECT                         0x10
 #define CONNACK                         0x20
@@ -41,16 +41,16 @@
 #define PINGRESP                        0xD0
 #define DISCONNECT                      0xE0
 
-// Директивы Версии
+// Р”РёСЂРµРєС‚РёРІС‹ Р’РµСЂСЃРёРё
 
 // For version 3 of the MQTT protocol
 //#define PROTOCOL_NAME     "MQIsdp"
-//#define PROTOCOL_VERSION  0x83  //3 почему-то выдает 0x83 вместо 3
+//#define PROTOCOL_VERSION  0x83  //3 РїРѕС‡РµРјСѓ-С‚Рѕ РІС‹РґР°РµС‚ 0x83 РІРјРµСЃС‚Рѕ 3
 // For version 3.1.1 of the MQTT protocol
 #define PROTOCOL_NAME                   "MQTT"
-#define PROTOCOL_VERSION                (0x04)  //3 выдает 0x83 вместо 3
+#define PROTOCOL_VERSION                (0x04)  //3 РІС‹РґР°РµС‚ 0x83 РІРјРµСЃС‚Рѕ 3
 
-// Директивы Не помню
+// Р”РёСЂРµРєС‚РёРІС‹ РќРµ РїРѕРјРЅСЋ
 
 // only for CONNACK V3.1.0
 // #define ACCEPTED                        (0x00UL)
@@ -71,7 +71,7 @@
 #define MQTT_MSB(A) (u8_t)((A & 0xFF00) >> 8)
 #define MQTT_LSB(A) (u8_t)(A & 0x00FF)
 
-// Macro. работа с буфером RX
+// Macro. СЂР°Р±РѕС‚Р° СЃ Р±СѓС„РµСЂРѕРј RX
 
 #define BUF_READ_PTR(_PBUF_, _PTR_, _STEP_)                         \
   do {                                                              \
@@ -93,7 +93,7 @@
     _PBUF_->rx.usCar += 2;                                          \
   } while(0)
 
-// Макрос для работы с буфером TX
+// РњР°РєСЂРѕСЃ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ Р±СѓС„РµСЂРѕРј TX
 
 #define BUF_WRITE_BYTE(_PBUF_, _BYTE_)                              \
   do {                                                              \
@@ -107,7 +107,7 @@
   } while(0)                                                        \
 
 
-// Исходящие сообщ
+// РСЃС…РѕРґСЏС‰РёРµ СЃРѕРѕР±С‰
 
 typedef enum {
 	MSG_SIMPLE,
@@ -117,7 +117,7 @@ typedef enum {
 } outmsg_t;
 
 
-// Разбор входящ сообщений
+// Р Р°Р·Р±РѕСЂ РІС…РѕРґСЏС‰ СЃРѕРѕР±С‰РµРЅРёР№
 
 // CONNECT
 typedef union {
@@ -237,7 +237,7 @@ typedef struct {
 }  tb_client_t;
 /*---------broker-end-----------------*/
 
-// Буфер
+// Р‘СѓС„РµСЂ
 
 typedef struct {
   u16_t usSize;
@@ -256,16 +256,16 @@ typedef	err_enum_t (*send_ptr_t)( s32_t, u8_t *, u32_t, u32_t *,
 	// sock_send(s32_t type, s32_t sock, u8_t *pBuf, u32_t len, u32_t *written, 
     // struct sockaddr *to, socklen_t tolen)
 
-// Базовая управляющая структура
+// РЈРїСЂР°РІР»СЏСЋС‰Р°СЏ СЃС‚СЂСѓРєС‚СѓСЂР° upvs_mqtt_srv
 
 typedef struct {
   data_t       xData;             //
-  char         id[MAX_ID_SIZE];  // Идентиф. клиента, уник. для разных сессий
-  tb_client_t *pxClients;        // указатель на список подл.клиентов
-  decoder_t    xDecod;           // Разбор вход сообщений
+  char         id[MAX_ID_SIZE];  // РРґРµРЅС‚РёС„. РєР»РёРµРЅС‚Р°, СѓРЅРёРє. РґР»СЏ СЂР°Р·РЅС‹С… СЃРµСЃСЃРёР№
+  tb_client_t *pxClients;        // СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЃРїРёСЃРѕРє РїРѕРґР».РєР»РёРµРЅС‚РѕРІ
+  decoder_t    xDecod;           // Р Р°Р·Р±РѕСЂ РІС…РѕРґ СЃРѕРѕР±С‰РµРЅРёР№
   upvs_srv_t  *pxUpvs;           // 
   send_ptr_t   psSendCb;          //
-  void        *pvCtx;           //  в кач-ве payload исп. "родитель" ctx_t
+  void        *pvCtx;           //  РІ РєР°С‡-РІРµ payload РёСЃРї. "СЂРѕРґРёС‚РµР»СЊ" ctx_t
 } mqtt_srv_t;
 
 void       *mqtt_srv__create(void);
