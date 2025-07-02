@@ -34,9 +34,9 @@ s32_t func_help_1601(u8_t *, u32_t, const u8_t *);
 #if   (defined CLT)
 static s32_t insert_item(upvs_err_t *, u32_t, s32_t);
 static s32_t remove_item(upvs_err_t *, u32_t, s32_t);
-#elif (defined SRV)
 static u8_t *get_desc(u8_t *, upvs_errdesc_t *, u32_t);
 static u8_t *get_help(u8_t *, upvs_errdesc_t *, u32_t);
+#elif (defined SRV)
 static void func_bits_1301_1401_1501_1601( u8_t *, u32_t, const u8_t *, 
                                            const u8_t *, const u8_t *,
                                            const u8_t * );
@@ -47,7 +47,7 @@ static void func_bits_1301_1401_1501_1601( u8_t *, u32_t, const u8_t *,
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 void *
-  upvs_err__create() {
+  upvs_err__create(void) {
 /*----------------------------------------------------------------------------*/
   upvs_err_t *self = malloc(sizeof(upvs_err_t));
   if (!self) return NULL;
@@ -74,13 +74,22 @@ void
 }
 
 /**	----------------------------------------------------------------------------
+	* @brief */
+err_item_t *
+  upvs_err__get_item(upvs_err_t *self, u32_t idx) {
+/*----------------------------------------------------------------------------*/  
+  if ((!self)|(idx >= UPVS_ERR_LIST_LENGHT)) return NULL;
+  return &(self->axItems[idx]);
+}
+
+/**	----------------------------------------------------------------------------
 	* @brief ???
 	* @retval error: Статус выполнения функции. */
 s32_t
   upvs_err__get_free_pos(upvs_err_t *self) {
 /*----------------------------------------------------------------------------*/
 	if (!self) return -1;
-  for (uint8_t i = 0; i < ITEMS_LENGHT; i++) {
+  for (uint8_t i = 0; i < UPVS_ERR_LIST_LENGHT; i++) {
 		if (self->axItems[i].ulCode == 0) {
       return (int)i;
     }
@@ -96,7 +105,7 @@ s32_t
 s32_t
   upvs_err__check_state(upvs_err_t *self, u32_t code, bool state, s32_t value) {
 /*----------------------------------------------------------------------------*/
-	if (!px) return -1;
+	if (!self) return -1;
   
   // Считаем, что пока state==1 авария авктивна и делаем запрос к БД добавить
   // новую запись с кодом 'code' и значением 'value'.
@@ -109,54 +118,56 @@ s32_t
 	return 0;
 }
 
-#elif (defined SRV)
-
-// Функции копирования payload параметров в буфер
-
 /**	----------------------------------------------------------------------------
 	* @brief Сообщение с информацией о возникшей неисправности ПВС (либо о её 
     устранении). Используется только после успешного подключения к брокеру */
-s32_t
-  upvs_err__get_buf(upvs_err_t *self, u32_t code, u32_t status) {
+upvs_err_buf_t *
+  upvs_err__get_buf(upvs_err_t *self, err_item_t *item) {
 /*----------------------------------------------------------------------------*/
   upvs_errdesc_t *pxerr = NULL;
   int i=0;
   
   // Ищем позицию с кодом "code"
   while ((self->paxDesc+i)->code != 0) {
-    if ((self->paxDesc+i)->code == code)
+    if ((self->paxDesc+i)->code == item->ulCode)
       pxerr = (upvs_errdesc_t *)(self->paxDesc+i);
     i++;
   }
-  if (!pxerr) return -1;
+  if (!pxerr) return NULL;
   
   // заполняем поля xErrBuf
   self->xErrBuf.err.code = pxerr->code;
   self->xErrBuf.err.priority = pxerr->priority;
   //if (get_desc(xErrBuf.acDescrDyn, pxerr, status)) return NULL;
-  self->xErrBuf.err.pcDescribe = get_desc(self->xErrBuf.dyn_buf.acDescr, pxerr, status);
+  self->xErrBuf.err.pcDescribe = get_desc( self->xErrBuf.dyn_buf.acDescr, pxerr,
+                                           item->bActive );
   self->xErrBuf.err.pcInfluence = pxerr->pcInfluence;
   //if (get_help(xErrBuf.acHelpDyn, pxerr, status)) return NULL;
-  self->xErrBuf.err.pcHelp = get_help(self->xErrBuf.dyn_buf.acHelp, pxerr, status);
+  self->xErrBuf.err.pcHelp = get_help( self->xErrBuf.dyn_buf.acHelp, pxerr,
+                                       item->bActive);
   
-  return 0;
+  return &self->xErrBuf;
 }
 
 /**	----------------------------------------------------------------------------
 	* @brief */
-err_item_t *
-  upvs_err__get_item(upvs_err_t *self, u32_t idx) {
+bool
+  upvs_err__is_new(upvs_err_t *self, u32_t idx) {
 /*----------------------------------------------------------------------------*/  
-  if ((!self)|(idx >= ITEMS_LENGHT)) return NULL;
-  return &(self->axItems[idx]);
+  if ((!self)|(idx >= UPVS_ERR_LIST_LENGHT)) return NULL;
+  return self->axItems[idx].bNew == true ? (true) : (false);
 }
+
+#elif (defined SRV)
+
+// Функции копирования payload параметров в буфер
 
 /**	----------------------------------------------------------------------------
 	* @brief */
 err_item_t *
   upvs_err__next(upvs_err_t *self) {
 /*----------------------------------------------------------------------------*/  
-  if (self->ulIdx >= ITEMS_LENGHT) self->ulIdx = 0;
+  if (self->ulIdx >= UPVS_ERR_LIST_LENGHT) self->ulIdx = 0;
   else self->ulIdx += 1;
   return &(self->axItems[self->ulIdx]);
 }
@@ -169,7 +180,7 @@ s32_t
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
   
-  for (s32_t i = 0; i < ITEMS_LENGHT; i++) {
+  for (s32_t i = 0; i < UPVS_ERR_LIST_LENGHT; i++) {
 		if ( (self->axItems[i].ulCode == code) ) {
       return i;
     }
@@ -799,7 +810,7 @@ static s32_t
   // Ищем совпадение по 'code' и 'value'.
   // если запись с такими значениями отсутсвует, то получем idx=-1
   // если запись присутствуют, то получаем idx отличный от '-1' и выходим
-  for (i = 0; i < ITEMS_LENGHT; i++) {
+  for (i = 0; i < UPVS_ERR_LIST_LENGHT; i++) {
 		if ( (self->axItems[i].ulCode == code) & (self->axItems[i].slValue == value) )
     {
       idx = i;
@@ -839,7 +850,7 @@ static s32_t
 
   // если ячейки в журнале нет, то выходим с ошибкой
   //if ( (idx = errdb_get_cell_id(px, code, value)) < 0 ) return -1;
-  for (i = 0; i < ITEMS_LENGHT; i++) {
+  for (i = 0; i < UPVS_ERR_LIST_LENGHT; i++) {
 		if ( self->axItems[i].ulCode == code ) {
       idx = i;
     }
@@ -854,8 +865,6 @@ static s32_t
   return 0;
 }
 
-#elif (defined SRV)
-  
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 static u8_t*
@@ -890,6 +899,7 @@ get_help(u8_t *pcDest, upvs_errdesc_t* px, u32_t status) {
   return pc;
 }
 
-
+#elif (defined SRV)
+  
 #endif // CLT or SRV
 
