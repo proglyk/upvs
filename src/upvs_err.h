@@ -60,7 +60,7 @@ typedef struct {
 
 typedef struct {
   // аварийные записи
-  err_item_t     axItems[ITEMS_LENGHT];
+  err_item_t     axItems[UPVS_ERR_LIST_LENGHT];
   // указатель на аварию в контексте текущего обмена по modbus tcp
   u32_t          ulIdx;
   upvs_err_buf_t xErrBuf;
@@ -69,19 +69,20 @@ typedef struct {
 
 
 
-void *upvs_err__create();
+void *upvs_err__create(void);
 int   upvs_err__init(upvs_err_t *);
 void  upvs_err__del(upvs_err_t *);
+err_item_t *upvs_err__get_item(upvs_err_t *, u32_t);
 s32_t upvs_err__get_free_pos(upvs_err_t *);
 // public
 #if   (defined CLT)
 s32_t upvs_err__check_state(upvs_err_t *, u32_t, bool, s32_t);
+upvs_err_buf_t *upvs_err__get_buf(upvs_err_t *, err_item_t *);
+bool upvs_err__is_new(upvs_err_t *, u32_t);
 #elif (defined SRV)
 err_item_t *upvs_err__next(upvs_err_t *);
 bool  upvs_err__is_help_equal(upvs_err_t *, s32_t , const u8_t *);
-s32_t upvs_err__get_buf(upvs_err_t *, u32_t, u32_t);
 s32_t upvs_err__get_item_idx(upvs_err_t *, s32_t);
-err_item_t *upvs_err__get_item(upvs_err_t *, u32_t);
 #endif
 
 #endif //_UPVS_ERR_H_
