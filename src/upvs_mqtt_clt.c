@@ -1,0 +1,154 @@
+#include "upvs_mqtt_clt.h"
+#include <stdlib.h>
+#include <string.h>
+#include "MQTTInterface.h"
+#include "dbg.h"
+
+// привЯзки
+extern Network xNetwork;
+
+static void MqttMessageArrived(MessageData* msg);
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+void *
+  upvs_mqtt_clt__create(void) {
+/*----------------------------------------------------------------------------*/
+  mqtt_clt_t *self = malloc(sizeof(mqtt_clt_t));
+  if (!self) return NULL;
+  
+  self->pxUpvs = upvs_clt__create();
+  if (!self->pxUpvs) return NULL;
+  
+  return (void *)self;
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief */
+int
+  upvs_mqtt_clt__init(mqtt_clt_t *self, s32_t sock) {
+/*----------------------------------------------------------------------------*/
+  int rc;
+  if (!self) return -1;
+  // if (!cb) return -1;
+  
+  if (upvs_clt__init(self->pxUpvs) < 0) return -1;
+  
+  //self->pxHooks = &xNetwork;
+  //self->pxHooks->socket = sock;
+  xNetwork.socket = sock;
+  MQTTClientInit( &(self->xControl), &xNetwork, 1000,
+                  self->ucSndBuf, sizeof(self->ucSndBuf),
+                  self->ucRcvBuf, sizeof(self->ucRcvBuf) );
+  
+  // запуск еще одной задачи
+  rc = MQTTStartTask(&(self->xControl));
+  if(rc != MQTT_SUCCESS) {
+    DBG_PRINT( NET_DEBUG, ("Can't create MQTTStartTask, in '%s' /UPVS/upvs_clt_sess.c:%d\r\n", 
+      __FUNCTION__, __LINE__) );
+    return NULL;
+  }
+  
+    // Подключение с блокировкой
+  memset((void *)&(self->xDataConn), NULL, sizeof(MQTTPacket_connectData));
+  memcpy((void *)&(self->xDataConn.struct_id), (const void *)"MQTC", 
+    sizeof(self->xDataConn.struct_id));
+  memcpy((void *)&(self->xDataConn.will.struct_id), (const void *)"MQTW", 
+    sizeof(self->xDataConn.will.struct_id));
+  self->xDataConn.willFlag = 0;
+	self->xDataConn.MQTTVersion = 4;
+	self->xDataConn.clientID.cstring = "STM32F4";
+	self->xDataConn.username.cstring = "client";
+	self->xDataConn.password.cstring = "public";
+	self->xDataConn.keepAliveInterval = 10;
+	self->xDataConn.cleansession = 1;
+  rc = MQTTConnect(&(self->xControl), &(self->xDataConn));
+  if(rc != MQTT_SUCCESS) {
+    DBG_PRINT( NET_DEBUG, ("Can't connect to ..., in '%s' /UPVS/upvs_clt_sess.c:%d\r\n", 
+      __FUNCTION__, __LINE__) );
+    return NULL;
+  }
+  // FIXME self->status |= STA_CONNECTED;
+  DBG_PRINT( NET_DEBUG, ("Connected to ..., in '%s' /UPVS/upvs_clt_sess.c:%d\r\n", 
+    __FUNCTION__, __LINE__) ); 
+  
+  // Подписка
+	rc = MQTT_SUCCESS;
+	rc |= MQTTSubscribe(&(self->xControl), "action/CSC", QOS0, MqttMessageArrived);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/reset_faults", QOS0, MqttMessageArrived);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_1", QOS0, MqttMessageArrived);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_1_frequency", QOS0, MqttMessageArrived);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_2", QOS0, MqttMessageArrived);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_3", QOS0, MqttMessageArrived);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/datetime", QOS0, MqttMessageArrived);
+  if (rc != MQTT_SUCCESS) {
+    DBG_PRINT( NET_DEBUG, ("Can't subscribe to ..., in '%s' /UPVS/upvs_clt_sess.c:%d\r\n", 
+      __FUNCTION__, __LINE__) );
+    return NULL;
+  }
+  // FIXME  pctx->status |= STA_SUBSCRIBED;
+  DBG_PRINT( NET_DEBUG, ("Subscribed to ..., in '%s' /UPVS/upvs_clt_sess.c:%d\r\n", 
+    __FUNCTION__, __LINE__) );  
+  
+  return 0;
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief */
+void
+  upvs_mqtt_clt__del(mqtt_clt_t *self) {
+/*----------------------------------------------------------------------------*/
+  if (!self) return;
+  //if (!self->pxUpvs) return;
+  
+  if (self->pxUpvs) upvs_clt__del(self->pxUpvs);
+  // free(self->pxClients);
+  // free(self->xData.rx.pcBuf);
+  // free(self->xData.tx.pcBuf);
+  free(self);
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief ???
+	* @retval Статус выполнения */
+static void
+	MqttMessageArrived( MessageData* msg ) {
+/*----------------------------------------------------------------------------*/
+  static u8_t acStrTemp[UPVS_TOPICPATH_SIZE];
+  
+  // Копируем топик лишь для того, чтобы привести его в 'строковый' вид
+  // с null-терминальным символом (необходимо для функций из <string.h>)
+  memcpy( (void *)acStrTemp, 
+          (const void *)msg->topicName->lenstring.data,
+          msg->topicName->lenstring.len);
+  acStrTemp[msg->topicName->lenstring.len] = '\0';
+  // вызов функции записи
+  /*upvs_clt__set( (const u8_t *)acStrTemp,
+                 msg->topicName->lenstring.len, 
+                 (const u8_t *)msg->message->payload,
+                 msg->message->payloadlen );*/
+}
+
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+s32_t
+  upvs_mqtt_clt__accept_err(mqtt_clt_t *self, u32_t idx) {
+/*----------------------------------------------------------------------------*/
+  s32_t rc;
+  MQTTMessage message;
+  
+  // берем ошибку
+  rc = upvs_clt__get_err( (pclt->axErrDb+i), idx, acPath, acError );
+  if (rc < 0) return -1;
+  // Берем имя топика и шлём (Publish) брокеру полученное сообщение
+  rc = upvs_mqtt_clt__send(self, acPath, acError);
+  if (rc) return -1;
+  
+  // Берем имя топика и шлём (Publish) брокеру полученное сообщение
+  message.qos = QOS1;
+  message.payload = (void*)pbuf;
+  message.payloadlen = lenght;
+  int ret = MQTTPublish(&self->xControl, (const char *)pbuf, &message);
+  if (ret != MQTT_SUCCESS) return -1;
+}
