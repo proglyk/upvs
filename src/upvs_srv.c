@@ -26,6 +26,9 @@ void *
   self->pxPrm = upvs_prm__create();
   if (!self->pxPrm) return NULL;
   
+  self->pxErr = upvs_err__create();
+  if (!self->pxErr) return NULL;
+  
   return (void *)self;
 }
 
@@ -35,9 +38,8 @@ int
   upvs_srv__init(upvs_srv_t *self) {
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
-  
   if (upvs_prm__init(self->pxPrm) < 0) return -1;
-  
+  if (upvs_err__init(self->pxErr) < 0) return -1;
   return 0;
 }
 
@@ -47,15 +49,14 @@ void
   upvs_srv__del(upvs_srv_t *self) {
 /*----------------------------------------------------------------------------*/
   if (!self) return;
-  if (!self->pxPrm) return;
-  
   upvs_prm__del(self->pxPrm);
+  upvs_err__del(self->pxErr);
   free(self);
 }
 
 /**	----------------------------------------------------------------------------
 	* @brief ???
-	* @retval Ñòàòóñ âûïîëíåíèÿ */
+	* @retval Ð¡Ñ‚Ð°Ñ‚ÑƒÑ Ð²Ñ‹Ð¿Ð¾Ð»Ð½ÐµÐ½Ð¸Ñ */
 s32_t
 	upvs_srv__get( upvs_srv_t *self, u32_t item, u8_t *pPath, u8_t *pValue, 
                  u32_t value_len ) {
@@ -68,17 +69,17 @@ s32_t
   bool bVar;
   float fVar;
   
-   // ïðîâåðêà àðã-îâ
+   // Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ° Ð°Ñ€Ð³-Ð¾Ð²
   if (!pPath || !pValue) return -1;
-  // óê-òåëü íà ïàðàìåòðîì ñ èíäåêñîì item
+  // ÑƒÐº-Ñ‚ÐµÐ»ÑŒ Ð½Ð° Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð¾Ð¼ Ñ Ð¸Ð½Ð´ÐµÐºÑÐ¾Ð¼ item
   //pax = (upvs_param_t *)(upvs_param__inst() + item);
   prm = upvs_prm__get_item(self->pxPrm, item);
   if (!prm) return -1;
-  // ôîðìèðóåì json
+  // Ñ„Ð¾Ñ€Ð¼Ð¸Ñ€ÑƒÐµÐ¼ json
   root = cJSON_CreateObject();
   if (!root) return -1;
   
-  // Ïîëó÷àåì çíà÷åíèå â çàâèñèìîñòè îò òèïà 'type' ïàðàìåòðà 
+  // ÐŸÐ¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ Ð² Ð·Ð°Ð²Ð¸ÑÐ¸Ð¼Ð¾ÑÑ‚Ð¸ Ð¾Ñ‚ Ñ‚Ð¸Ð¿Ð° 'type' Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð° 
   switch (prm->xValue.type) {
     case (BOOL):
       //sta = upvs_param__get_b(prm, &bVar);
@@ -86,8 +87,8 @@ s32_t
       if (sta != -1) {
         cJSON_AddItemToObject( root, (const char *)prm->pcName, 
                                cJSON_CreateBool(bVar) );
-        // Ïîñëå ÷åãî ôîðìèðóåì json-ñòðîêó { "some_key": some_value } ñðàçó âî
-        // âíåøíèé áóôåð
+        // ÐŸÐ¾ÑÐ»Ðµ Ñ‡ÐµÐ³Ð¾ Ñ„Ð¾Ñ€Ð¼Ð¸Ñ€ÑƒÐµÐ¼ json-ÑÑ‚Ñ€Ð¾ÐºÑƒ { "some_key": some_value } ÑÑ€Ð°Ð·Ñƒ Ð²Ð¾
+        // Ð²Ð½ÐµÑˆÐ½Ð¸Ð¹ Ð±ÑƒÑ„ÐµÑ€
         rc = cJSON_PrintPreallocated(root, (char *)pValue, value_len, false);
         if (!rc) goto errexit;
       }
@@ -98,8 +99,8 @@ s32_t
       if (sta != -1) {
         cJSON_AddItemToObject( root, (const char *)prm->pcName, 
                                cJSON_CreateFloat(fVar) );
-        // Ïîñëå ÷åãî ôîðìèðóåì json-ñòðîêó { "some_key": some_value } ñðàçó âî
-        // âíåøíèé áóôåð
+        // ÐŸÐ¾ÑÐ»Ðµ Ñ‡ÐµÐ³Ð¾ Ñ„Ð¾Ñ€Ð¼Ð¸Ñ€ÑƒÐµÐ¼ json-ÑÑ‚Ñ€Ð¾ÐºÑƒ { "some_key": some_value } ÑÑ€Ð°Ð·Ñƒ Ð²Ð¾
+        // Ð²Ð½ÐµÑˆÐ½Ð¸Ð¹ Ð±ÑƒÑ„ÐµÑ€
         rc = cJSON_PrintPreallocated(root, (char *)pValue, value_len, false);
         if (!rc) goto errexit;
       }
@@ -136,15 +137,15 @@ int
   static parser_t xParser;
   int rc = 0;
   
-  // ïðîâåðêà àðã-îâ
+  // Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ° Ð°Ñ€Ð³-Ð¾Ð²
   if (!pcPath) return -1;
   
-  // áåðåì òîïèê äëÿ äàëüíåéøåé èäåíòèôèêàöèè ñîäåðæèìîãî
+  // Ð±ÐµÑ€ÐµÐ¼ Ñ‚Ð¾Ð¿Ð¸Ðº Ð´Ð»Ñ Ð´Ð°Ð»ÑŒÐ½ÐµÐ¹ÑˆÐµÐ¹ Ð¸Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ†Ð¸Ð¸ ÑÐ¾Ð´ÐµÑ€Ð¶Ð¸Ð¼Ð¾Ð³Ð¾
   memcpy((void *)xParser.acTopic, (const void *)pcPath, path_len);
   xParser.acTopic[path_len] = '\0';
   
-  // 3. îïðåäåëèòü òèï äàííûõ:
-  // 3.1 àâàðèÿ
+  // 3. Ð¾Ð¿Ñ€ÐµÐ´ÐµÐ»Ð¸Ñ‚ÑŒ Ñ‚Ð¸Ð¿ Ð´Ð°Ð½Ð½Ñ‹Ñ…:
+  // 3.1 Ð°Ð²Ð°Ñ€Ð¸Ñ
   if ( !strcmp((const void *)xParser.acTopic, pcErrorPath) ) {
     rc = error_set( self, pcPld );
   } else {
@@ -235,7 +236,7 @@ s32_t
 }
 
 
-// Ôóíêöèè, îãðàíè÷åííûå îáëàñòüþ âèäèìîñòè äàííîãî ôàéëà
+// Ð¤ÑƒÐ½ÐºÑ†Ð¸Ð¸, Ð¾Ð³Ñ€Ð°Ð½Ð¸Ñ‡ÐµÐ½Ð½Ñ‹Ðµ Ð¾Ð±Ð»Ð°ÑÑ‚ÑŒÑŽ Ð²Ð¸Ð´Ð¸Ð¼Ð¾ÑÑ‚Ð¸ Ð´Ð°Ð½Ð½Ð¾Ð³Ð¾ Ñ„Ð°Ð¹Ð»Ð°
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
@@ -246,22 +247,22 @@ static int
   //static parser_t xParser;
 	int rc;
   
-  // ïðîâåðêà àðã-îâ
+  // Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ° Ð°Ñ€Ð³-Ð¾Ð²
   if ((!pxPrs) || (!pPld)) return -1;
-  // ïàðñèì ïðèøåäøóþ json-ñòðîêó è çàïîëíÿåì îáúåêò "root",
-  // ïðåäñòàâëÿþùèé ñîáîé ñâÿçíûé ñïèñîê, ñîäåðæèìûì ñòðîêè
+  // Ð¿Ð°Ñ€ÑÐ¸Ð¼ Ð¿Ñ€Ð¸ÑˆÐµÐ´ÑˆÑƒÑŽ json-ÑÑ‚Ñ€Ð¾ÐºÑƒ Ð¸ Ð·Ð°Ð¿Ð¾Ð»Ð½ÑÐµÐ¼ Ð¾Ð±ÑŠÐµÐºÑ‚ "root",
+  // Ð¿Ñ€ÐµÐ´ÑÑ‚Ð°Ð²Ð»ÑÑŽÑ‰Ð¸Ð¹ ÑÐ¾Ð±Ð¾Ð¹ ÑÐ²ÑÐ·Ð½Ñ‹Ð¹ ÑÐ¿Ð¸ÑÐ¾Ðº, ÑÐ¾Ð´ÐµÑ€Ð¶Ð¸Ð¼Ñ‹Ð¼ ÑÑ‚Ñ€Ð¾ÐºÐ¸
   root = cJSON_Parse((const char *)pPld);
   if (!root) {
     return -1;
   }
-  // Âûòàñêèåì èç "root" èìÿ ïàðàìåòðà è ïðèñâàèâàåì åãî ïîëþ pcName
+  // Ð’Ñ‹Ñ‚Ð°ÑÐºÐ¸ÐµÐ¼ Ð¸Ð· "root" Ð¸Ð¼Ñ Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð° Ð¸ Ð¿Ñ€Ð¸ÑÐ²Ð°Ð¸Ð²Ð°ÐµÐ¼ ÐµÐ³Ð¾ Ð¿Ð¾Ð»ÑŽ pcName
   pxPrs->xParam.pcName = (u8_t *)root->child->string;
-  // Âûòàñêèåì èç "root" çíà÷åíèå ïàðàìåòðà è ïðèñâàèâàåì åãî ïîëþ xValue
+  // Ð’Ñ‹Ñ‚Ð°ÑÐºÐ¸ÐµÐ¼ Ð¸Ð· "root" Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð° Ð¸ Ð¿Ñ€Ð¸ÑÐ²Ð°Ð¸Ð²Ð°ÐµÐ¼ ÐµÐ³Ð¾ Ð¿Ð¾Ð»ÑŽ xValue
   rc = pvs_value_typecast(root->child, &(pxPrs->xParam.xValue));
   if (rc) goto exit;
-  // çàïèñûâàåì àäðåñ ìàññèâà äëÿ äàëüíåéøåãî èñïîëüçîâàíèÿ
+  // Ð·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ Ð°Ð´Ñ€ÐµÑ Ð¼Ð°ÑÑÐ¸Ð²Ð° Ð´Ð»Ñ Ð´Ð°Ð»ÑŒÐ½ÐµÐ¹ÑˆÐµÐ³Ð¾ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð¸Ñ
   pxPrs->xParam.pcTopic = pxPrs->acTopic;
-  // îñóùåñòâëÿåì ïîèñê ïàðàìåòðà ïî èìåíè è çàïèñûâàåì íîâîå çíà÷åíèå
+  // Ð¾ÑÑƒÑ‰ÐµÑÑ‚Ð²Ð»ÑÐµÐ¼ Ð¿Ð¾Ð¸ÑÐº Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð° Ð¿Ð¾ Ð¸Ð¼ÐµÐ½Ð¸ Ð¸ Ð·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ Ð½Ð¾Ð²Ð¾Ðµ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ
   rc = upvs_prm__set( self->pxPrm, &(pxPrs->xParam), false );
   //if (rc) goto exit;
   
@@ -285,22 +286,22 @@ static int
 	s32_t code;
 	
 	s32_t idx;
-	//static u8_t acBuffer[HELP_LENGHT]; // ïîä âðåìåí. ðàçìåù. ñîäåðæèìîãî Help
+	//static u8_t acBuffer[HELP_LENGHT]; // Ð¿Ð¾Ð´ Ð²Ñ€ÐµÐ¼ÐµÐ½. Ñ€Ð°Ð·Ð¼ÐµÑ‰. ÑÐ¾Ð´ÐµÑ€Ð¶Ð¸Ð¼Ð¾Ð³Ð¾ Help
 	//upvs_err_db_t *pPoll = upvs_err__db_inst();
 	
   if ( !pcPld ) goto exit;
   
-  // ïàðñèì ïðèøåäøóþ json-ñòðîêó è çàïîëíÿåì îáúåêò "root", ïðåäñòàâëÿþùèé 
-  // ñîáîé ñâÿçíûé ñïèñîê, ñîäåðæàùèé ñòðîêè
+  // Ð¿Ð°Ñ€ÑÐ¸Ð¼ Ð¿Ñ€Ð¸ÑˆÐµÐ´ÑˆÑƒÑŽ json-ÑÑ‚Ñ€Ð¾ÐºÑƒ Ð¸ Ð·Ð°Ð¿Ð¾Ð»Ð½ÑÐµÐ¼ Ð¾Ð±ÑŠÐµÐºÑ‚ "root", Ð¿Ñ€ÐµÐ´ÑÑ‚Ð°Ð²Ð»ÑÑŽÑ‰Ð¸Ð¹ 
+  // ÑÐ¾Ð±Ð¾Ð¹ ÑÐ²ÑÐ·Ð½Ñ‹Ð¹ ÑÐ¿Ð¸ÑÐ¾Ðº, ÑÐ¾Ð´ÐµÑ€Ð¶Ð°Ñ‰Ð¸Ð¹ ÑÑ‚Ñ€Ð¾ÐºÐ¸
   root = cJSON_Parse((const char *)pcPld);
   if (!root) goto exit;
 	
-	// áåð¸ì "code"
+	// Ð±ÐµÑ€Ñ‘Ð¼ "code"
   if (!root->child) goto exit;
   if (strcmp((const void *)root->child->string, "code") != 0) goto exit;
   code = root->child->valueint;
 	
-	// áåð¸ì "status"
+	// Ð±ÐµÑ€Ñ‘Ð¼ "status"
 	if (!root->child) goto exit;
 	if (!root->child->next) goto exit;
 	if (strcmp((const void *)root->child->next->string, "status") != 0) 
@@ -308,11 +309,11 @@ static int
 	active = (bool)root->child->next->valueint;
 
   idx = upvs_err__get_item_idx(self->pxErr, code);
-	// åñëè àâàðèÿ ñ äàííûìè êîäîì è çíà÷åíèåì ðàíåå áûëè çàôèêñèðîâàíû
+	// ÐµÑÐ»Ð¸ Ð°Ð²Ð°Ñ€Ð¸Ñ Ñ Ð´Ð°Ð½Ð½Ñ‹Ð¼Ð¸ ÐºÐ¾Ð´Ð¾Ð¼ Ð¸ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸ÐµÐ¼ Ñ€Ð°Ð½ÐµÐµ Ð±Ñ‹Ð»Ð¸ Ð·Ð°Ñ„Ð¸ÐºÑÐ¸Ñ€Ð¾Ð²Ð°Ð½Ñ‹
   if (idx >= 0) {
-		// ïðîâåðÿåì ñòàòóñ 'active' íîâîãî ñîîáùåíèÿ
+		// Ð¿Ñ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ ÑÑ‚Ð°Ñ‚ÑƒÑ 'active' Ð½Ð¾Ð²Ð¾Ð³Ð¾ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ñ
 		if (active) {
-      // áåð¸ì è çàïèñûâàåì "help" âî âðåìåííûé áóôåð
+      // Ð±ÐµÑ€Ñ‘Ð¼ Ð¸ Ð·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ "help" Ð²Ð¾ Ð²Ñ€ÐµÐ¼ÐµÐ½Ð½Ñ‹Ð¹ Ð±ÑƒÑ„ÐµÑ€
       if (!root->child->next->next) goto exit;
       if (!root->child->next->next->next) goto exit;
       if (!root->child->next->next->next->next) goto exit;
@@ -321,33 +322,33 @@ static int
                   "help" ) != 0) goto exit;
       //strcpy((void *)acBuffer, 
       //  (const void *)root->child->next->next->next->next->next->valuestring);
-      //ïðîâåðÿåì ñîîòâåòñòâèå Help
+      //Ð¿Ñ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ ÑÐ¾Ð¾Ñ‚Ð²ÐµÑ‚ÑÑ‚Ð²Ð¸Ðµ Help
 			if (!upvs_err__is_help_equal( self->pxErr, idx,
         (const u8_t *)root->child->next->next->next->next->next->valuestring ))
       {
-				// Åñëè ðàçëè÷àþòñÿ, òî îáíîâëÿåì
+				// Ð•ÑÐ»Ð¸ Ñ€Ð°Ð·Ð»Ð¸Ñ‡Ð°ÑŽÑ‚ÑÑ, Ñ‚Ð¾ Ð¾Ð±Ð½Ð¾Ð²Ð»ÑÐµÐ¼
 				rc = error_update( self, idx,
           (const u8_t *)root->child->next->next->next->next->next->valuestring );
 			} else {
-				// Åñëè æå help ðàâíû, òî íè÷åãî íå äåëàåì
+				// Ð•ÑÐ»Ð¸ Ð¶Ðµ help Ñ€Ð°Ð²Ð½Ñ‹, Ñ‚Ð¾ Ð½Ð¸Ñ‡ÐµÐ³Ð¾ Ð½Ðµ Ð´ÐµÐ»Ð°ÐµÐ¼
 				asm("nop");
 			}
 		} else {
-			// Åñëè çàïèñü óæå åñòü òî ýòó çàïèñü óäàëÿåì
+			// Ð•ÑÐ»Ð¸ Ð·Ð°Ð¿Ð¸ÑÑŒ ÑƒÐ¶Ðµ ÐµÑÑ‚ÑŒ Ñ‚Ð¾ ÑÑ‚Ñƒ Ð·Ð°Ð¿Ð¸ÑÑŒ ÑƒÐ´Ð°Ð»ÑÐµÐ¼
 			rc = error_remove(self, idx);
 		}
   }	else {
-		// ñíîâà ïðîâåðÿåì ñòàòóñ 'active'
+		// ÑÐ½Ð¾Ð²Ð° Ð¿Ñ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ ÑÑ‚Ð°Ñ‚ÑƒÑ 'active'
 		if (active) {
-			// âñòàâëÿåì íîâóþ çàïèñü
+			// Ð²ÑÑ‚Ð°Ð²Ð»ÑÐµÐ¼ Ð½Ð¾Ð²ÑƒÑŽ Ð·Ð°Ð¿Ð¸ÑÑŒ
 			rc = error_insert(self, root, code);
 		} else {
-			// èëè íè÷åãî íå äåëàåì
+			// Ð¸Ð»Ð¸ Ð½Ð¸Ñ‡ÐµÐ³Ð¾ Ð½Ðµ Ð´ÐµÐ»Ð°ÐµÐ¼
 			asm("nop");
 		}
 	}
 
-  // óäàëÿåì îáúåêò
+  // ÑƒÐ´Ð°Ð»ÑÐµÐ¼ Ð¾Ð±ÑŠÐµÐºÑ‚
   cJSON_Delete(root);
   return rc;
   
@@ -369,7 +370,7 @@ static s32_t
   //prm = upvs_prm__get_item(self->pxPrm, item);
   if (!root) goto exit;
   
-  // ïîëó÷àåì èíäåêñ ïóñòîé çàïèñè â æóðíàëå. Áóäåì çàïèñûâàòü â íå¸ äàííûå
+  // Ð¿Ð¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ Ð¸Ð½Ð´ÐµÐºÑ Ð¿ÑƒÑÑ‚Ð¾Ð¹ Ð·Ð°Ð¿Ð¸ÑÐ¸ Ð² Ð¶ÑƒÑ€Ð½Ð°Ð»Ðµ. Ð‘ÑƒÐ´ÐµÐ¼ Ð·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°Ñ‚ÑŒ Ð² Ð½ÐµÑ‘ Ð´Ð°Ð½Ð½Ñ‹Ðµ
   idx = upvs_err__get_free_pos(self->pxErr);
   if (idx < 0) {
     DBG_PRINT( NET_DEBUG, ("Can't get free pos for Error '%d', in '%s' "  \
@@ -377,36 +378,36 @@ static s32_t
     return -1;
   }
   
-  // áåð¸ì ññûëêó íà ìåñòî ïîä çàïèñü
+  // Ð±ÐµÑ€Ñ‘Ð¼ ÑÑÑ‹Ð»ÐºÑƒ Ð½Ð° Ð¼ÐµÑÑ‚Ð¾ Ð¿Ð¾Ð´ Ð·Ð°Ð¿Ð¸ÑÑŒ
   //pcell = (pPoll->axCells + idx);
   item = upvs_err__get_item(self->pxErr, idx);
   if (!item) goto exit;
   
-  // çàïèñûâàåì 'code', 'status'
+  // Ð·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ 'code', 'status'
   item->ulCode = code;
   item->bActive = (s32_t)true;
   
-  // áåð¸ì è çàïèñûâàåì "priority"
+  // Ð±ÐµÑ€Ñ‘Ð¼ Ð¸ Ð·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ "priority"
   if (!root->child->next->next) goto exit;
   if (strcmp((const void *)root->child->next->next->string, "priority") != 0) 
     goto exit;
   item->ulPrio = root->child->next->next->valueint;
 
-  // áåð¸ì è çàïèñûâàåì "describe"
+  // Ð±ÐµÑ€Ñ‘Ð¼ Ð¸ Ð·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ "describe"
   if (!root->child->next->next->next) goto exit;
   if (strcmp((const void *)root->child->next->next->next->string, "describe") != 0) 
     goto exit;
   strcpy((void *)item->acDesc, 
     (const void *)root->child->next->next->next->valuestring);
     
-  // áåð¸ì è çàïèñûâàåì "influence"
+  // Ð±ÐµÑ€Ñ‘Ð¼ Ð¸ Ð·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ "influence"
   if (!root->child->next->next->next->next) goto exit;
   if (strcmp((const void *)root->child->next->next->next->next->string, "influence") != 0) 
     goto exit;
   strcpy((void *)item->acInfl, 
     (const void *)root->child->next->next->next->next->valuestring);
 
-  // áåð¸ì è çàïèñûâàåì "help"
+  // Ð±ÐµÑ€Ñ‘Ð¼ Ð¸ Ð·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ "help"
   if (!root->child->next->next->next->next->next) goto exit;
   if (strcmp((const void *)root->child->next->next->next->next->next->string, "help") != 0) 
     goto exit;
@@ -428,9 +429,9 @@ static s32_t
 /*----------------------------------------------------------------------------*/
   err_item_t *item;
     
-  // áåð¸ì ññûëêó íà ìåñòî ïîä çàïèñü
+  // Ð±ÐµÑ€Ñ‘Ð¼ ÑÑÑ‹Ð»ÐºÑƒ Ð½Ð° Ð¼ÐµÑÑ‚Ð¾ Ð¿Ð¾Ð´ Ð·Ð°Ð¿Ð¸ÑÑŒ
   item = upvs_err__get_item(self->pxErr, idx);
-  // çàíóëÿåì ïîëÿ
+  // Ð·Ð°Ð½ÑƒÐ»ÑÐµÐ¼ Ð¿Ð¾Ð»Ñ
   item->ulCode = 0;
   item->ulPrio = 0;
   item->bActive = 0;
@@ -448,9 +449,9 @@ static s32_t
 /*----------------------------------------------------------------------------*/
   err_item_t *item;
 
-  // áåð¸ì ññûëêó íà ìåñòî ïîä çàïèñü
+  // Ð±ÐµÑ€Ñ‘Ð¼ ÑÑÑ‹Ð»ÐºÑƒ Ð½Ð° Ð¼ÐµÑÑ‚Ð¾ Ð¿Ð¾Ð´ Ð·Ð°Ð¿Ð¸ÑÑŒ
   item = upvs_err__get_item(self->pxErr, idx);
-  // çàïèñûâàåì "help"
+  // Ð·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ "help"
   strcpy((void *)item->acHelp, (const void *)pBuf);
   
   return 0;
@@ -458,14 +459,14 @@ static s32_t
 
 /**	----------------------------------------------------------------------------
 	* @brief ???
-	* @retval error: Ñòàòóñ âûïîëíåíèÿ ôóíêöèè. */
+	* @retval error: Ð¡Ñ‚Ð°Ñ‚ÑƒÑ Ð²Ñ‹Ð¿Ð¾Ð»Ð½ÐµÐ½Ð¸Ñ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸. */
 static int
   pvs_value_typecast(struct cJSON *pObj, value_ptr_t *pValue) {
 /*----------------------------------------------------------------------------*/
-  // ïðîâåðêà
+  // Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ°
   if ((!pObj) || (!pValue)) return -1;
 
-  // îðèåíòèðóÿñü íà 'type', ïîëó÷àåì çíà÷åíèå
+  // Ð¾Ñ€Ð¸ÐµÐ½Ñ‚Ð¸Ñ€ÑƒÑÑÑŒ Ð½Ð° 'type', Ð¿Ð¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ
   switch (pObj->type) {
     case cJSON_True:
     case cJSON_False:
