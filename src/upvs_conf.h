@@ -3,8 +3,9 @@
 
 #define UPVS_PARAM_LIST_LEN             72U
 
-#define UPVS_PARAM_VALUE_SIZE           (64UL)
-#define UPVS_TOPICPATH_SIZE             (64UL)
+#define UPVS_PARAM_VALUE_SIZE           64U
+#define UPVS_TOPICPATH_SIZE             64U
+#define UPVS_VALUE_SIZE                 64U
 #define UPVS_CLT_ERROR_SIZE             2048U
 
 // Размер буферов. для upvs_srv2.h
