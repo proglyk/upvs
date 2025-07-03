@@ -6,7 +6,7 @@
 #include "upvs_conf.h"
 #include "upvs_clt.h"
 
-// ”правл¤юща¤ структура upvs_mqtt_srv
+// Управляющая структура upvs_mqtt_srv
 
 typedef struct {
   //s32_t count;
@@ -16,9 +16,9 @@ typedef struct {
   u8_t ucRcvBuf[MQTT_BUFSIZE]; //mqtt receive buffer
   MQTTPacket_connectData xDataConn;
   // data_t       xData;             //
-  // char         id[MAX_ID_SIZE];  // »дентиф. клиента, уник. дл¤ разных сессий
+  // char         id[MAX_ID_SIZE];  // Идентиф. клиента, уник. для разных сессий
   // tb_client_t *pxClients;        // указатель на список подл.клиентов
-  // decoder_t    xDecod;           // –азбор вход сообщений
+  // decoder_t    xDecod;           // Разбор вход сообщений
   upvs_clt_t  *pxUpvs;           // 
   // send_ptr_t   psSendCb;          //
   // void        *pvCtx;           //  в кач-ве payload исп. "родитель" ctx_t
