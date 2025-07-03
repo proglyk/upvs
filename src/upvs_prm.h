@@ -95,6 +95,9 @@ s32_t	upvs_prm__set_all(param_t *, bool, bool);
 s32_t upvs_prm__get_b(param_t *, bool *);
 s32_t	upvs_prm__get_sl(param_t *, s32_t *);
 s32_t	upvs_prm__get_f(param_t *, f32_t *);
+// attributes
+void  upvs_prm__set_attr_new(param_t *, bool);
+bool  upvs_prm__get_attr_new(param_t *);
 // type decode
 u32_t upvs_prm__enc_type(const u8_t *);
 
