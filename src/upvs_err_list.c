@@ -2,7 +2,7 @@
 //#include "userint.h"
 #include "stdlib.h"
 
-//#ifdef UPVS_CLT
+#if (defined CLT)
 
 extern s32_t func_desc_1113_1307_1407_1506_1606( u8_t *, u32_t, const u8_t * );
 extern s32_t func_desc_1202(u8_t *, u32_t, const u8_t *);
@@ -607,4 +607,4 @@ extern s32_t func_help_1601(u8_t *, u32_t, const u8_t *);
 };
 //upvs_errdesc_t const *pxErrdesc = &(errdesc[0]);
 
-//#endif //UPVS_CLT
+#endif //CLT
