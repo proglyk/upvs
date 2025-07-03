@@ -102,28 +102,25 @@ typedef struct MQTTSubackData
     enum QoS grantedQoS;
 } MQTTSubackData;
 
-typedef void (*messageHandler)(MessageData*);
+typedef void (*messageHandler)(MessageData*, void*);
 
 typedef struct MQTTClient
 {
-    unsigned int next_packetid,
-      command_timeout_ms;
-    size_t buf_size,
-      readbuf_size;
-    unsigned char *buf,
-      *readbuf;
+    unsigned int next_packetid, command_timeout_ms;
+    size_t buf_size, readbuf_size;
+    unsigned char *buf, *readbuf;
     unsigned int keepAliveInterval;
     char ping_outstanding;
     int isconnected;
     int cleansession;
+    void *pld;
 
-    struct MessageHandlers
-    {
+    struct MessageHandlers {
         const char* topicFilter;
-        void (*fp) (MessageData*);
+        void (*fp) (MessageData*, void*);
     } messageHandlers[MAX_MESSAGE_HANDLERS];      /* Message handlers are indexed by subscription topic */
 
-    void (*defaultMessageHandler) (MessageData*);
+    void (*defaultMessageHandler) (MessageData*, void*);
 
     Network* ipstack;
     Timer last_sent, last_received;
@@ -144,7 +141,7 @@ typedef struct MQTTClient
  * @param
  */
 DLLExport void MQTTClientInit(MQTTClient* client, Network* network, unsigned int command_timeout_ms,
-		unsigned char* sendbuf, size_t sendbuf_size, unsigned char* readbuf, size_t readbuf_size);
+		unsigned char* sendbuf, size_t sendbuf_size, unsigned char* readbuf, size_t readbuf_size, void* pld);
 
 /** MQTT Connect - send an MQTT connect packet down the network and wait for a Connack
  *  The nework object must be connected to the network endpoint before calling this
