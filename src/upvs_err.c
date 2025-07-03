@@ -8,8 +8,6 @@ extern const upvs_errdesc_t errdesc[];
 
 // public
 #if   (defined CLT)
-
-#elif (defined SRV)
 s32_t func_desc_1113_1307_1407_1506_1606( u8_t *, u32_t, const u8_t * );
 s32_t func_desc_1202(u8_t *, u32_t, const u8_t *);
 s32_t func_help_1103(u8_t *, u32_t, const u8_t *);
@@ -28,6 +26,8 @@ s32_t func_help_1301(u8_t *, u32_t, const u8_t *);
 s32_t func_help_1401(u8_t *, u32_t, const u8_t *);
 s32_t func_help_1501(u8_t *, u32_t, const u8_t *);
 s32_t func_help_1601(u8_t *, u32_t, const u8_t *);
+#elif (defined SRV)
+
 #endif // CLT or SRV
 
 // static
@@ -36,10 +36,11 @@ static s32_t insert_item(upvs_err_t *, u32_t, s32_t);
 static s32_t remove_item(upvs_err_t *, u32_t, s32_t);
 static u8_t *get_desc(u8_t *, upvs_errdesc_t *, u32_t);
 static u8_t *get_help(u8_t *, upvs_errdesc_t *, u32_t);
-#elif (defined SRV)
 static void func_bits_1301_1401_1501_1601( u8_t *, u32_t, const u8_t *, 
                                            const u8_t *, const u8_t *,
                                            const u8_t * );
+#elif (defined SRV)
+
 #endif // CLT or SRV
 
 // Функции, доступные извне
@@ -155,49 +156,53 @@ bool
   upvs_err__is_new(upvs_err_t *self, u32_t idx) {
 /*----------------------------------------------------------------------------*/  
   if ((!self)|(idx >= UPVS_ERR_LIST_LENGHT)) return NULL;
-  return self->axItems[idx].bNew == true ? (true) : (false);
+  return self->axItems[idx].bNew ? true : false;
 }
-
-#elif (defined SRV)
-
-// Функции копирования payload параметров в буфер
 
 /**	----------------------------------------------------------------------------
 	* @brief */
-err_item_t *
-  upvs_err__next(upvs_err_t *self) {
+void
+  upvs_err__set_new(upvs_err_t *self, u32_t idx, bool sta) {
 /*----------------------------------------------------------------------------*/  
-  if (self->ulIdx >= UPVS_ERR_LIST_LENGHT) self->ulIdx = 0;
-  else self->ulIdx += 1;
-  return &(self->axItems[self->ulIdx]);
+  if ((!self)|(idx >= UPVS_ERR_LIST_LENGHT)) return;
+  self->axItems[idx].bNew = sta;
 }
 
 /**	----------------------------------------------------------------------------
-	* @brief ???
-	* @retval error: Статус выполнения функции. */
-s32_t
-  upvs_err__get_item_idx(upvs_err_t *self, s32_t code) {
-/*----------------------------------------------------------------------------*/
-  if (!self) return -1;
-  
-  for (s32_t i = 0; i < UPVS_ERR_LIST_LENGHT; i++) {
-		if ( (self->axItems[i].ulCode == code) ) {
-      return i;
-    }
-	}
-	return -1;
-}
-
-/**	----------------------------------------------------------------------------
-	* @brief ???
-	* @retval error: Статус выполнения функции. */
+	* @brief */
 bool
-  upvs_err__is_help_equal(upvs_err_t *self, s32_t idx, const u8_t *pBuf) {
-/*----------------------------------------------------------------------------*/
-	if ( !strcmp((const char *)pBuf, (const char *)self->axItems[idx].acHelp) ) {
-		return true;
-	}
-	return false;
+  upvs_err__is_act(upvs_err_t *self, u32_t idx) {
+/*----------------------------------------------------------------------------*/  
+  if ((!self)|(idx >= UPVS_ERR_LIST_LENGHT)) return NULL;
+  return self->axItems[idx].bActive ? true : false;
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief */
+void
+  upvs_err__set_act(upvs_err_t *self, u32_t idx, bool sta) {
+/*----------------------------------------------------------------------------*/  
+  if ((!self)|(idx >= UPVS_ERR_LIST_LENGHT)) return;
+  self->axItems[idx].bActive = sta;
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief */
+void
+  upvs_err__reset(upvs_err_t *self, u32_t idx) {
+/*----------------------------------------------------------------------------*/  
+  if ((!self)|(idx >= UPVS_ERR_LIST_LENGHT)) return;
+  self->axItems[idx].ulCode = 0;
+  self->axItems[idx].slValue = 0;
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief */
+s32_t
+  upvs_err__get_code(upvs_err_t *self, u32_t idx) {
+/*----------------------------------------------------------------------------*/  
+  if ((!self)|(idx >= UPVS_ERR_LIST_LENGHT)) return -1;
+  return (s32_t)self->axItems[idx].ulCode;
 }
 
 // Функции формирования текста аварийного сообщения
@@ -791,6 +796,47 @@ func_help_1305_1405(u8_t *pcDest, u32_t status, const u8_t *pcSrc) {
   return 0;
 }
 
+#elif (defined SRV)
+
+// Функции копирования payload параметров в буфер
+
+/**	----------------------------------------------------------------------------
+	* @brief */
+err_item_t *
+  upvs_err__next(upvs_err_t *self) {
+/*----------------------------------------------------------------------------*/  
+  if (self->ulIdx >= UPVS_ERR_LIST_LENGHT) self->ulIdx = 0;
+  else self->ulIdx += 1;
+  return &(self->axItems[self->ulIdx]);
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief ???
+	* @retval error: Статус выполнения функции. */
+s32_t
+  upvs_err__get_item_idx(upvs_err_t *self, s32_t code) {
+/*----------------------------------------------------------------------------*/
+  if (!self) return -1;
+  
+  for (s32_t i = 0; i < UPVS_ERR_LIST_LENGHT; i++) {
+		if ( (self->axItems[i].ulCode == code) ) {
+      return i;
+    }
+	}
+	return -1;
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief ???
+	* @retval error: Статус выполнения функции. */
+bool
+  upvs_err__is_help_equal(upvs_err_t *self, s32_t idx, const u8_t *pBuf) {
+/*----------------------------------------------------------------------------*/
+	if ( !strcmp((const char *)pBuf, (const char *)self->axItems[idx].acHelp) ) {
+		return true;
+	}
+	return false;
+}
 
 #endif // SRV
 

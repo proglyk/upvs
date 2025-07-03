@@ -79,6 +79,11 @@ s32_t upvs_err__get_free_pos(upvs_err_t *);
 s32_t upvs_err__check_state(upvs_err_t *, u32_t, bool, s32_t);
 upvs_err_buf_t *upvs_err__get_buf(upvs_err_t *, err_item_t *);
 bool upvs_err__is_new(upvs_err_t *, u32_t);
+void upvs_err__set_new(upvs_err_t *, u32_t, bool);
+bool upvs_err__is_act(upvs_err_t *, u32_t);
+void upvs_err__set_act(upvs_err_t *, u32_t, bool);
+void upvs_err__reset(upvs_err_t *, u32_t);
+s32_t upvs_err__get_code(upvs_err_t *, u32_t);
 #elif (defined SRV)
 err_item_t *upvs_err__next(upvs_err_t *);
 bool  upvs_err__is_help_equal(upvs_err_t *, s32_t , const u8_t *);
