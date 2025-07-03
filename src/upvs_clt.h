@@ -27,5 +27,12 @@ void upvs_clt__set_sernum(u8_t *, ser_num_t *);
 int upvs_clt__set( upvs_clt_t *, const u8_t *, u32_t, const u8_t *, u32_t  );
 int upvs_clt__get_err( upvs_clt_t *, u32_t, u8_t *, u8_t * );
 bool upvs_clt__is_err_new(upvs_clt_t *, u32_t);
+void upvs_clt__set_err_new(upvs_clt_t *, u32_t, bool);
+bool upvs_clt__is_err_act(upvs_clt_t *, u32_t);
+void upvs_clt__set_err_act(upvs_clt_t *, u32_t, bool);
+void upvs_clt__reset_err(upvs_clt_t *, u32_t);
+s32_t upvs_clt__get_err_code(upvs_clt_t *, u32_t);
+bool upvs_clt__get_prm_new(upvs_clt_t *, u32_t);
+s32_t upvs_clt__edit_prm_new(upvs_clt_t *, u32_t, bool);
 
 #endif
