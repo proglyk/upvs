@@ -27,7 +27,8 @@ typedef struct {
 void *upvs_mqtt_clt__create(void);
 int   upvs_mqtt_clt__init(mqtt_clt_t *, s32_t);
 void  upvs_mqtt_clt__del(mqtt_clt_t *);
-//s32_t	upvs_mqtt_clt__send( mqtt_clt_t *, const u8_t *, u32_t );
+s32_t	upvs_mqtt_clt__send(mqtt_clt_t *, const u8_t *, const u8_t *);
+
 s32_t upvs_mqtt_clt__accept_err(mqtt_clt_t *, u32_t);
 
 #endif //UPVS_MQTT_CLT_H

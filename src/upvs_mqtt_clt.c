@@ -129,26 +129,21 @@ static void
                  msg->message->payloadlen );*/
 }
 
+//s32_t	upvs_mqtt_clt__send( mqtt_clt_t *, const u8_t *, u32_t );
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 s32_t
-  upvs_mqtt_clt__accept_err(mqtt_clt_t *self, u32_t idx) {
+  upvs_mqtt_clt__send(mqtt_clt_t *self, const u8_t *path, const u8_t *desc) {
 /*----------------------------------------------------------------------------*/
-  s32_t rc;
   MQTTMessage message;
-  
-  // берем ошибку
-  rc = upvs_clt__get_err( (pclt->axErrDb+i), idx, acPath, acError );
-  if (rc < 0) return -1;
-  // Берем имя топика и шлём (Publish) брокеру полученное сообщение
-  rc = upvs_mqtt_clt__send(self, acPath, acError);
-  if (rc) return -1;
   
   // Берем имя топика и шлём (Publish) брокеру полученное сообщение
   message.qos = QOS1;
-  message.payload = (void*)pbuf;
-  message.payloadlen = lenght;
-  int ret = MQTTPublish(&self->xControl, (const char *)pbuf, &message);
+  message.payload = (void*)desc;
+  message.payloadlen = strlen((const char *)desc);
+  int ret = MQTTPublish(&self->xControl, (const char *)path, &message);
   if (ret != MQTT_SUCCESS) return -1;
+  return 0;
 }
+
