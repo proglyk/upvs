@@ -4,7 +4,56 @@
 #include "upvs_conf.h"
 #include "userint.h"
 #include <stdbool.h>
+#include <string.h>
 
+#define UPVS_PRM__ADD_VAL_B(X, B)                         \
+  do {                                                            \
+    (X->xValue.mag.b != B) ? (X->xValue.bNew = true) : (X->xValue.bNew = false);     \
+    X->xValue.mag.b = B;                                             \
+  } while(0) 
+
+#define UPVS_PRM__ADD_VAL_SL(X, SL)                       \
+  do {                                                            \
+    (X->xValue.mag.sl != SL) ? (X->xValue.bNew = true) : (X->xValue.bNew = false);   \
+    X->xValue.mag.sl = SL;                                           \
+  } while(0) 
+
+#define UPVS_PRM__ADD_VAL_F_1(X, F, PTR)                  \
+  do {                                                            \
+		((*PTR = (roundf(F * 10UL) / 10U)) != X->xValue.mag.f) ?	        \
+			(X->xValue.bNew = true) : (X->xValue.bNew = false);               \
+    X->xValue.mag.f = *PTR;                                          \
+  } while(0) 
+
+/*#define UPVS_PARAM_CLT__ADD_VALUE_F_01(X, F, PTR)								  \
+  do {                                                            \
+		((*PTR = (roundf(F * 100UL) / 100U)) != X.xValue.mag.f) ?			  \
+			(X.xValue.bNew = true) : (X.xValue.bNew = false);               \
+    X.xValue.mag.f = *PTR;                                          \
+  } while(0)*/
+
+#define UPVS_PRM__ADD_VAL_S(X, S)                         \
+  do {                                                            \
+    (strcmp((const char *)X->xValue.mag.ac, (const char *)S) != 0) ? \
+			(X->xValue.bNew = true) : (X->xValue.bNew = false);               \
+    strcpy((char *)X->xValue.mag.ac, (const char *)S);               \
+  } while(0)
+
+#define UPVS_PRM__ADD_VAL_T(X, T)                                     \
+  do {                                                                        \
+    (strcmp((const char *)X->xValue.mag.ac, upvs_prm__dec_type(T)) != 0) ?   \
+			(X->xValue.bNew = true) : (X->xValue.bNew = false);                       \
+    upvs_prm__set_type(X->xValue.mag.ac, T);                                   \
+  } while(0)
+
+#define UPVS_PRM__ADD_VAL_VERS(X, PVERS, PBUF)            \
+  do {                                                            \
+    sprintf((char *)PBUF, "%01d.%01d", *(PVERS+0), *(PVERS+1));           \
+    (strcmp((const char *)X->xValue.mag.ac, (const char *)PBUF) != 0) ?  \
+			(X->xValue.bNew = true) : (X->xValue.bNew = false);               \
+    strcpy((char *)X->xValue.mag.ac, (const char *)PBUF);            \
+  } while(0)
+ 
 typedef enum {
   UNK,
   BOOL,
@@ -76,6 +125,8 @@ typedef struct {
   value_t xValue;       // Значение параметра
 } param_t;
 
+#define prm_get_item(ARG1, ARG2) upvs_prm__get_item(ARG1, ARG2)
+
 typedef struct {
   param_t *paxList; //[UPVS_PARAM_LIST_LEN];
 } upvs_param_t;
@@ -100,6 +151,7 @@ void  upvs_prm__set_attr_new(param_t *, bool);
 bool  upvs_prm__get_attr_new(param_t *);
 // type decode
 u32_t upvs_prm__enc_type(const u8_t *);
-
+const char *upvs_prm__dec_type(u32_t);
+s32_t upvs_prm__set_type(u8_t *, u32_t);
 
 #endif //_UPVS_PRM_H_
