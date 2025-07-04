@@ -9,8 +9,8 @@ typedef struct {
   mqtt_clt_t *pxMqtt;  // Экземпляр сервера MQTT
 //xTimerHandle xTimer;  // программный таймер для исходящих сообщ
   s32_t slCountAlive;
-  s32_t slCountItem;
-  s32_t slCountNew;
+  u32_t ulCountItem;
+  u32_t ulCountNew;
   u8_t acPath[UPVS_TOPICPATH_SIZE];
   u8_t value[UPVS_VALUE_SIZE];
   u8_t acError[UPVS_CLT_ERROR_SIZE];
@@ -21,7 +21,7 @@ typedef struct {
 static void *conn_init(sess_init_cb_ptr_t, net_if_data_t *, void*);
 static signed long conn_do(void*);
 static void conn_del(sess_del_cb_ptr_t, void*);
-static s32_t accept_new_error(ctx_t *, u32_t);
+static s32_t publish_err(ctx_t *, u32_t);
 static s32_t publish_prm(ctx_t *, u32_t);
 
 // привязки
@@ -58,8 +58,8 @@ static void *
   if (upvs_mqtt_clt__init(ctx->pxMqtt, pdata->slSock) < 0) return NULL;
     
   //FIXME
-  ctx->slCountItem = UPVS_CLT_CNT_INIT; //27;
-  ctx->slCountNew = UPVS_CLT_CNT_INIT;
+  ctx->ulCountItem = UPVS_CLT_CNT_INIT; //27;
+  ctx->ulCountNew = UPVS_CLT_CNT_INIT;
   //pctx->state = CLT_BUSY;
   //pctx->error = false; //FIXME сейчас поле error дублируется в других местах
   
@@ -89,17 +89,22 @@ static signed long
   // передаем очередной параметр
   for (u32_t i = 0; i < UPVS_ERR_LIST_LENGHT; i++) {
     if (upvs_clt__is_err_new(ctx->pxMqtt->pxUpvs, i)) {
-      accept_new_error(ctx, i);
+      //accept_new_error(ctx, i);
+      rc = publish_err(ctx, i);
+      if (rc < 0) {
+        DBG_PRINT( NET_DEBUG, ("Can't get error desc '%s', in '%s' /UPVS2/upvs_clt_conn.c:%d\r\n", 
+          ctx->acError, __FUNCTION__, __LINE__) );
+      }
       // после отправки очищаем флаг bNew.
       upvs_clt__set_err_new(ctx->pxMqtt->pxUpvs, i, false);
       // Не трогаем ulCode и slValue если авария "Активна" и зачищаем их если
       // авария сброшена
       if (upvs_clt__is_err_act(ctx->pxMqtt->pxUpvs, i)) {
-        DBG_PRINT( NET_DEBUG, ("Error (%d) is active, in '%s' /UPVS/upvs_clt_sess.c:%d\n", 
+        DBG_PRINT( NET_DEBUG, ("Error (%d) is active, in '%s' /UPVS2/upvs_clt_conn.c:%d\n", 
           upvs_clt__get_err_code(ctx->pxMqtt->pxUpvs, i), __FUNCTION__, __LINE__) );
       }
       else {
-        DBG_PRINT( NET_DEBUG, ("Error (%d) is inactive, in '%s' /UPVS/upvs_clt_sess.c:%d\n", 
+        DBG_PRINT( NET_DEBUG, ("Error (%d) is inactive, in '%s' /UPVS2/upvs_clt_conn.c:%d\n", 
           upvs_clt__get_err_code(ctx->pxMqtt->pxUpvs, i), __FUNCTION__, __LINE__) );
         upvs_clt__reset_err(ctx->pxMqtt->pxUpvs, i);
       }
@@ -107,19 +112,19 @@ static signed long
   }
   
   // забор даных с обмена по CAN
-  if (ctx->slCountNew == UPVS_CLT_CNT_INIT) {
+  if (ctx->ulCountNew == UPVS_CLT_CNT_INIT) {
     // FIXME if_upvs__update(pparam); //upvs_param_clt__update(pparam);
   }
   // Проверка на наличие изменений в значениях параметров
-  if (upvs_clt__get_prm_new(ctx->pxMqtt->pxUpvs, ctx->slCountNew)) {
+  if (upvs_clt__get_prm_new(ctx->pxMqtt->pxUpvs, ctx->ulCountNew)) {
     // обрабатываем изменение
-    rc = publish_prm(ctx, ctx->slCountNew);
+    rc = publish_prm(ctx, ctx->ulCountNew);
     if (rc < 0) {
       DBG_PRINT( NET_DEBUG, ("Can't publish change to %s, in '%s' /UPVS2/upvs_clt_conn.c:%d\r\n", 
         ctx->acPath, __FUNCTION__, __LINE__) );
     }
     // затираем флаг для любого статуса исполнения 'accept_param_change'
-    upvs_clt__edit_prm_new(ctx->pxMqtt->pxUpvs, ctx->slCountNew, false);
+    upvs_clt__edit_prm_new(ctx->pxMqtt->pxUpvs, ctx->ulCountNew, false);
   }
   
   // Проверка на наличие запроса 'get_all' со стороны брокера (сервера)
@@ -127,31 +132,31 @@ static signed long
     // опрос данных с CAN
     // FIXME if_upvs__update(pparam);
     //
-    rc = publish_prm(ctx, ctx->slCountItem);
+    rc = publish_prm(ctx, ctx->ulCountItem);
     if (rc < 0) {
       // сбрасываем флаг запроса 'get_all' - оч сомнительная операция FIXME
       ctx->pxMqtt->pxUpvs->bReqSendAll = false;
       // Скидываем счетчик до индекса начального параметра - тоже вопрос FIXME
-      ctx->slCountItem = UPVS_CLT_CNT_INIT;
+      ctx->ulCountItem = UPVS_CLT_CNT_INIT;
       DBG_PRINT( NET_DEBUG, ("Can't get/publish param %s, in '%s' /UPVS2/upvs_clt_conn.c:%d\r\n", 
         ctx->acPath, __FUNCTION__, __LINE__) );
     }
     // ставим флаг FIXME
     //pctx->status |= STA_PUBLISHED;
     //считает только при наличии команды
-    if (ctx->slCountItem < UPVS_CLT_CNT_MAX) //FIXME
-      ctx->slCountItem += 1;
+    if (ctx->ulCountItem < UPVS_CLT_CNT_MAX) //FIXME
+      ctx->ulCountItem += 1;
     else {
       ctx->pxMqtt->pxUpvs->bReqSendAll = false;
-      ctx->slCountItem = UPVS_CLT_CNT_INIT;
+      ctx->ulCountItem = UPVS_CLT_CNT_INIT;
     }
   }
 
   // считает всегда
-  if (ctx->slCountNew < UPVS_CLT_CNT_MAX)
-    ctx->slCountNew += 1;
+  if (ctx->ulCountNew < UPVS_CLT_CNT_MAX)
+    ctx->ulCountNew += 1;
   else
-    ctx->slCountNew = UPVS_CLT_CNT_INIT;
+    ctx->ulCountNew = UPVS_CLT_CNT_INIT;
   
 	vTaskDelay(250);
 	return 0;
@@ -185,7 +190,7 @@ static void
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 static s32_t
-  accept_new_error(ctx_t *ctx, u32_t idx) {
+  publish_err(ctx_t *ctx, u32_t idx) {
 /*----------------------------------------------------------------------------*/
   s32_t rc;
   
@@ -193,7 +198,7 @@ static s32_t
   memset(ctx->acPath, '\0', sizeof(ctx->acPath));
   memset(ctx->acError, '\0', sizeof(ctx->acError));
   // берем ошибку
-  rc = upvs_clt__get_err( ctx->pxMqtt->pxUpvs, idx, ctx->acPath, ctx->acError );
+  rc = upvs_clt__get_err(ctx->pxMqtt->pxUpvs, ctx->acPath, ctx->acError, idx);
   if (rc < 0) return -1;
   // Берем имя топика и шлём (Publish) брокеру полученное сообщение
   rc = upvs_mqtt_clt__send( ctx->pxMqtt, (const u8_t *)ctx->acPath, 
@@ -213,7 +218,7 @@ static s32_t
   memset(ctx->acPath, '\0', sizeof(ctx->acPath));
   memset(ctx->value, '\0', sizeof(ctx->value));
   // по индексу idx получаем искомый парамтер и заполняем строки
-  rc = upvs_clt__get_prm( ctx->pxMqtt->pxUpvs, ctx->acPath, ctx->value, idx );
+  rc = upvs_clt__get_prm(ctx->pxMqtt->pxUpvs, ctx->acPath, ctx->value, idx);
   if (rc < 0) return -1;
   // Полученные имя топика и значение шлём (Publish) брокеру
   rc = upvs_mqtt_clt__send( ctx->pxMqtt, (const u8_t *)ctx->acPath, 
