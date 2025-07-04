@@ -55,7 +55,7 @@ int
   // запуск еще одной задачи
   rc = MQTTStartTask(&(self->xControl));
   if(rc != MQTT_SUCCESS) {
-    DBG_PRINT( NET_DEBUG, ("Can't create MQTTStartTask, in '%s' /UPVS/upvs_clt_sess.c:%d\r\n", 
+    DBG_PRINT( NET_DEBUG, ("Can't create MQTTStartTask, in '%s' /UPVS2/upvs_clt_sess.c:%d\r\n", 
       __FUNCTION__, __LINE__) );
     return NULL;
   }
@@ -75,12 +75,12 @@ int
 	self->xDataConn.cleansession = 1;
   rc = MQTTConnect(&(self->xControl), &(self->xDataConn));
   if(rc != MQTT_SUCCESS) {
-    DBG_PRINT( NET_DEBUG, ("Can't connect to ..., in '%s' /UPVS/upvs_clt_sess.c:%d\r\n", 
+    DBG_PRINT( NET_DEBUG, ("Can't connect to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
       __FUNCTION__, __LINE__) );
     return NULL;
   }
   // FIXME self->status |= STA_CONNECTED;
-  DBG_PRINT( NET_DEBUG, ("Connected to ..., in '%s' /UPVS/upvs_clt_sess.c:%d\r\n", 
+  DBG_PRINT( NET_DEBUG, ("Connected to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
     __FUNCTION__, __LINE__) ); 
   
   // Подписка
@@ -93,12 +93,12 @@ int
   rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_3", QOS0, MqttMessageArrived);
   rc |= MQTTSubscribe(&(self->xControl), "action/CSC/datetime", QOS0, MqttMessageArrived);
   if (rc != MQTT_SUCCESS) {
-    DBG_PRINT( NET_DEBUG, ("Can't subscribe to ..., in '%s' /UPVS/upvs_clt_sess.c:%d\r\n", 
+    DBG_PRINT( NET_DEBUG, ("Can't subscribe to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
       __FUNCTION__, __LINE__) );
     return NULL;
   }
   // FIXME  pctx->status |= STA_SUBSCRIBED;
-  DBG_PRINT( NET_DEBUG, ("Subscribed to ..., in '%s' /UPVS/upvs_clt_sess.c:%d\r\n", 
+  DBG_PRINT( NET_DEBUG, ("Subscribed to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
     __FUNCTION__, __LINE__) );  
   
   return 0;

@@ -4,7 +4,7 @@
 #include "upvs_conf.h"
 #include "upvs_prm.h"
 #include "upvs_err.h"
-#include "upvs_mqtt_srv.h"
+//#include "upvs_mqtt_srv.h"
 #include "FreeRTOS.h"
 #include "timers.h"
 

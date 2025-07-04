@@ -239,7 +239,7 @@ static err_enum_t
   }
   memcpy(self->id, (const char *)con_msg->payload.client_id, con_msg->payload.client_id_len);
   
-  DBG_PRINT( NET_DEBUG, ("Client UPVS '%s' has added, in '%s' /UPVS/upvs_srv_sess.c:%d\r\n", 
+  DBG_PRINT( NET_DEBUG, ("Client '%s' added, in '%s' /UPVS2/upvs_mqtt_srv.c:%d\r\n", 
     self->id, __FUNCTION__, __LINE__) );
   
   
@@ -262,7 +262,7 @@ static err_enum_t
 /*----------------------------------------------------------------------------*/
   if (strcmp(self->id, "")) {
     if (is_client_connected(self, self->id)) {
-      DBG_PRINT( NET_DEBUG, ("Client UPVS %s has removed, in '%s' /UPVS/upvs_srv_sess.c:%d\r\n", 
+      DBG_PRINT( NET_DEBUG, ("Client %s removed, in '%s' /UPVS2/upvs_mqtt_srv.c:%d\r\n", 
         self->id, __FUNCTION__, __LINE__) );
       client_remove(self, self->id);
     }
@@ -367,7 +367,7 @@ static err_enum_t
                        (const u8_t *)pub_msg->payload );
 	if (sta < 0) {
     DBG_PRINT( NET_DEBUG, ("Can't process ingoing PUB (sta=%02d), in '%s' " \
-      "/UPVS/upvs_srv_sess.c:%d\r\n", sta, __FUNCTION__, __LINE__) );
+      "/UPVS2/upvs_mqtt_srv.c:%d\r\n", sta, __FUNCTION__, __LINE__) );
     return ERR_VAL;
 	}
   
@@ -455,7 +455,7 @@ static err_enum_t
   // Добавить новую либо обновить QoS существующей подписки.
   subs_add_update_topic_list(plist, sub_msg, topics_num, sub_result);
   
-  DBG_PRINT( NET_DEBUG, ("Client UPVS %s has subscribed, in '%s' /UPVS/upvs_srv_sess.c:%d\r\n", 
+  DBG_PRINT( NET_DEBUG, ("Client %s subscribed, in '%s' /UPVS2/upvs_mqtt_srv.c:%d\r\n", 
     self->id, __FUNCTION__, __LINE__) );
 
   // формируем и отправляем ответ "SUBACK"

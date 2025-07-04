@@ -75,7 +75,7 @@ int
     acStrAll[3] = '\0';
     if ( strcmp((const char *)acStrAll, "all") ) return -1;
     self->bReqSendAll = true; //FIXME
-    DBG_PRINT( NET_DEBUG, ("Received cmd 'all', in '%s' /UPVS/upvs_clt.c:%d\r\n", 
+    DBG_PRINT( NET_DEBUG, ("Received cmd 'all', in '%s' /UPVS2/upvs_clt.c:%d\r\n", 
       __FUNCTION__, __LINE__) );
   } else {
     // 1ое условие: устройство поддерживает прием только в корневой топик "action"
@@ -84,7 +84,7 @@ int
     if (!strstr((const char *)pcPath, "CSC")) return -1;
     // хз какие еще проверки
     param_set( self, pcPath, path_len, pPld );
-    DBG_PRINT( NET_DEBUG, ("Received action %s, in '%s' /UPVS/upvs_clt.c:%d\r\n", 
+    DBG_PRINT( NET_DEBUG, ("Received action %s, in '%s' /UPVS2/upvs_clt.c:%d\r\n", 
       pcPath, __FUNCTION__, __LINE__) );
   }
   
@@ -179,7 +179,7 @@ s32_t
   return 0;
   
   errexit:
-  DBG_PRINT( NET_DEBUG, ("errexit, in '%s' /UPVS/upvs_clt.c:%d\r\n", 
+  DBG_PRINT( NET_DEBUG, ("errexit, in '%s' /UPVS2/upvs_clt.c:%d\r\n", 
     __FUNCTION__, __LINE__) );
   if (!root)
     cJSON_Delete(root);

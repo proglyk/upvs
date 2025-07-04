@@ -1,5 +1,5 @@
 #include "upvs_conf.h"
-#include "upvs_srv.h"
+#include "upvs_mqtt_srv.h"
 #include "lwip/err.h"
 #include "net_if.h"
 
@@ -73,7 +73,7 @@ static void *
   
   //xTimerStart(ctx->xTimer, 0);
   
-  DBG_PRINT( NET_DEBUG, ("Sess created (sock=%d), in '%s' /UPVS/upvs_srv_sess.c:%d\r\n", 
+  DBG_PRINT( NET_DEBUG, ("Sess created (sock=%d), in '%s' /UPVS2/upvs_srv_conn.c:%d\r\n", 
     ctx->slSock, __FUNCTION__, __LINE__) );
   
   // возвращаем указат для дальнейшего исп.-ния
@@ -107,8 +107,8 @@ static signed long
 	return 0;
   
   exit:
-  LWIP_DEBUGF( NET_DEBUG, ("Breaking recv ('%s'), in '%s' /UPVS/"             \
-    "upvs_srv_sess3.c:%d\r\n", get_err_str(err), __FUNCTION__, __LINE__) );
+  LWIP_DEBUGF( NET_DEBUG, ("Breaking recv ('%s'), in '%s' /UPVS2/"             \
+    "upvs_srv_conn.c:%d\r\n", get_err_str(err), __FUNCTION__, __LINE__) );
   return -1; //FIXME возвращаю 0 временно.
 }
 

@@ -8,12 +8,14 @@ struct upvs_err_st {
   // указатель на аварию в контексте текущего обмена по modbus tcp
   u32_t          ulIdx;
   upvs_err_buf_t xErrBuf;
+#if (defined CLT)
   upvs_errdesc_t const *paxDesc;
+#endif
 };
 
-// Extern
-//extern upvs_errdesc_t const *pxErrdesc;
+#if (defined CLT)
 extern const upvs_errdesc_t errdesc[];
+#endif
 
 // public
 #if   (defined CLT)
@@ -70,7 +72,10 @@ int
   upvs_err__init(upvs_err_t *self) {
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
+  
+#if (defined CLT)
   self->paxDesc = &(errdesc[0]); //pxErrdesc;
+#endif
   return 0;
 }
 
@@ -875,7 +880,7 @@ static s32_t
   
   // Ищем свободную позицию в БД
   if ((idx = upvs_err__get_free_pos(self)) == -1) {
-    DBG_PRINT( NET_DEBUG, ("Can't get free pos for %04d, in '%s' /UPVS/upvs_clt.c:%d\r\n", 
+    DBG_PRINT( NET_DEBUG, ("Can't get free pos for %04d, in '%s' /UPVS2/upvs_err.c:%d\r\n", 
       code, __FUNCTION__, __LINE__) );
     return -1;
   }

@@ -276,7 +276,7 @@ static int
   
   exit:
   if (rc) {
-    DBG_PRINT( NET_DEBUG, ("'%s' wasn't set (sta=%02d), in '%s' /UPVS/upvs_srv.c:%d\r\n", 
+    DBG_PRINT( NET_DEBUG, ("'%s' wasn't set (sta=%02d), in '%s' /UPVS2/upvs_srv.c:%d\r\n", 
       pxPrs->xParam.pcName, rc, __FUNCTION__, __LINE__) );
   }
   cJSON_Delete(root);
@@ -362,7 +362,7 @@ static int
   
   exit:
   DBG_PRINT( NET_DEBUG, ("Error while parsing JSON, "      \
-    "in '%s' /UPVS/upvs_srv.c:%d\r\n", __FUNCTION__, __LINE__) );
+    "in '%s' /UPVS2/upvs_srv.c:%d\r\n", __FUNCTION__, __LINE__) );
   cJSON_Delete(root);
   return -1;
 }
@@ -382,7 +382,7 @@ static s32_t
   idx = upvs_err__get_free_pos(self->pxErr);
   if (idx < 0) {
     DBG_PRINT( NET_DEBUG, ("Can't get free pos for Error '%d', in '%s' "  \
-      "/UPVS/upvs_srv.c:%d\r\n", code, __FUNCTION__, __LINE__) );
+      "/UPVS2/upvs_srv.c:%d\r\n", code, __FUNCTION__, __LINE__) );
     return -1;
   }
   
@@ -426,7 +426,7 @@ static s32_t
   
   exit:
   DBG_PRINT( NET_DEBUG, ("Error while parsing JSON, "      \
-    "in '%s' /UPVS/upvs_srv.c:%d\r\n", __FUNCTION__, __LINE__) );
+    "in '%s' /UPVS2/upvs_srv.c:%d\r\n", __FUNCTION__, __LINE__) );
   return -1;
 }
 
