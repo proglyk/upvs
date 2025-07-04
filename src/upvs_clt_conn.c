@@ -16,17 +16,13 @@ typedef struct {
   u8_t acError[UPVS_CLT_ERROR_SIZE];
 } ctx_t;
 
-// public
-
-
 // static
 // интерфейсные
 static void *conn_init(sess_init_cb_ptr_t, net_if_data_t *, void*);
 static signed long conn_do(void*);
 static void conn_del(sess_del_cb_ptr_t, void*);
 static s32_t accept_new_error(ctx_t *, u32_t);
-static s32_t accept_param_change(ctx_t *);
-static s32_t accept_request_get_all(ctx_t *);
+static s32_t publish_prm(ctx_t *, u32_t);
 
 // привязки
 net_if_fn_t xFnCltUpvs = {
@@ -111,12 +107,13 @@ static signed long
   }
   
   // забор даных с обмена по CAN
-  if (ctx->slCountNew == UPVS_CLT_CNT_INIT)
+  if (ctx->slCountNew == UPVS_CLT_CNT_INIT) {
     // FIXME if_upvs__update(pparam); //upvs_param_clt__update(pparam);
-  // отправка
+  }
+  // Проверка на наличие изменений в значениях параметров
   if (upvs_clt__get_prm_new(ctx->pxMqtt->pxUpvs, ctx->slCountNew)) {
     // обрабатываем изменение
-    rc = accept_param_change(ctx);
+    rc = publish_prm(ctx, ctx->slCountNew);
     if (rc < 0) {
       DBG_PRINT( NET_DEBUG, ("Can't publish change to %s, in '%s' /UPVS2/upvs_clt_conn.c:%d\r\n", 
         ctx->acPath, __FUNCTION__, __LINE__) );
@@ -125,12 +122,12 @@ static signed long
     upvs_clt__edit_prm_new(ctx->pxMqtt->pxUpvs, ctx->slCountNew, false);
   }
   
-  // Передача списка Параметров по запросу СКДУ
+  // Проверка на наличие запроса 'get_all' со стороны брокера (сервера)
   if (ctx->pxMqtt->pxUpvs->bReqSendAll) {
     // опрос данных с CAN
     // FIXME if_upvs__update(pparam);
     //
-    rc = accept_request_get_all(ctx);
+    rc = publish_prm(ctx, ctx->slCountItem);
     if (rc < 0) {
       // сбрасываем флаг запроса 'get_all' - оч сомнительная операция FIXME
       ctx->pxMqtt->pxUpvs->bReqSendAll = false;
@@ -209,39 +206,16 @@ static s32_t
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 static s32_t
-  accept_param_change(ctx_t *ctx) {
+  publish_prm(ctx_t *ctx, u32_t idx) {
 /*----------------------------------------------------------------------------*/
   s32_t rc = 0;
-  // готовим буфер передачи
+  // готовим строки под размещение топика и значения параметра
   memset(ctx->acPath, '\0', sizeof(ctx->acPath));
   memset(ctx->value, '\0', sizeof(ctx->value));
-  // передаем очередной параметр
-  //rc = upvs_clt__param_get(upvs_clt__inst(), pctx->slCountNew, acPath,
-  //                           value, sizeof(value));
+  // по индексу idx получаем искомый парамтер и заполняем строки
+  rc = upvs_clt__get_prm( ctx->pxMqtt->pxUpvs, ctx->acPath, ctx->value, idx );
   if (rc < 0) return -1;
-  
-  // Берем имя топика и шлём (Publish) брокеру полученное сообщение
-  rc = upvs_mqtt_clt__send( ctx->pxMqtt, (const u8_t *)ctx->acPath, 
-                            (const u8_t *)ctx->value );
-  if (rc < 0) return -1;
-  
-  return 0;
-}
-
-/**	----------------------------------------------------------------------------
-	* @brief ??? */
-static s32_t
-  accept_request_get_all(ctx_t *ctx) {
-/*----------------------------------------------------------------------------*/
-  s32_t rc = 0;
-// готовим буфер передачи
-  memset(ctx->acPath, '\0', sizeof(ctx->acPath));
-  memset(ctx->value, '\0', sizeof(ctx->value));
-  // передаем очередной параметр
-  //rc = upvs_clt__param_get(upvs_clt__inst(), pctx->slCountItem, acPath,
-  //                           value, sizeof(value));
-  if (rc < 0) return -1;
-  // Берем имя топика и шлём (Publish) брокеру полученное сообщение
+  // Полученные имя топика и значение шлём (Publish) брокеру
   rc = upvs_mqtt_clt__send( ctx->pxMqtt, (const u8_t *)ctx->acPath, 
                             (const u8_t *)ctx->value );
   if (rc < 0) return -1;
