@@ -12,6 +12,10 @@ static const char* pcText = "АО";
 static int param_set( upvs_clt_t *, const u8_t *, u32_t, const u8_t * );
 static int typecast(struct cJSON *, value_ptr_t *);
 
+// Общедоступные (public) функции
+
+// Функции создания, инициализации, удаления экземпляра упр. структуры
+
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 void *
@@ -48,6 +52,8 @@ void
   free(self);
   self = NULL;
 }
+
+// Основные функции клиентской части
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
@@ -86,47 +92,98 @@ int
 }
 
 /**	----------------------------------------------------------------------------
-	* @brief ???
-  * @param pDest: ???
-	* @param code: ??? */
-void
-  upvs_clt__set_sernum(u8_t *pDest, ser_num_t *px) {
-/*----------------------------------------------------------------------------*/  
-  u8_t buf[6];
+	* @brief ??? */
+s32_t
+  upvs_clt__get_prm( upvs_clt_t *self, u8_t *pPath, u8_t *pValue, u32_t idx ) {
+/*----------------------------------------------------------------------------*/
+  bool rc;
+  int idx;
+  s32_t sta;
+  cJSON* root = NULL;
+  param_t *prm;
+  //upvs_param_t *param = upvs_param__inst() + item;
+  //
+  bool bVar;
+  s32_t slVar;
+  float fVar;
   
-  if (!pDest || !px) return;
+  if (!self || !pPath || !pValue) return -1;
+  // получаем элемент с индексом idx из списка параметров
+  prm = upvs_prm__get_item(self->pxPrm, idx);
+  // если запрошенный индекс больше размера массива
+  // FIXME не знаю как получить размер массива параметров
+  //if (item > (sizeof(*ppsrc)/sizeof(upvs_param_t)))
+  //  return -1;
+  //param = upvs_param__inst() + item;
   
-  // порядковый номер
-  sprintf((char *)(pDest), "%03d", px->Digit);
-  // текстовая вставка
-  strcat((char *)pDest, pcText);
-  // месяц произ-ва
-  sprintf((char *)(buf), "%02d", px->Month);
-  strcat((char *)pDest, (const char *)buf);
-  // год произ-ва
-  sprintf((char *)(buf), "%04d", px->Year);
-  strcat((char *)pDest, (const char *)buf);
-}
-
-/**	----------------------------------------------------------------------------
-	* @brief ???
-  * @param pDest: ???
-	* @param code: ???
-	* @retval ??? */
-void
-  upvs_prm__set_mac(u8_t *pDest, u8_t *pSrc, u32_t len) {
-/*----------------------------------------------------------------------------*/  
-  u8_t i;
-  
-  if (!pDest || !pSrc) return;
-  if (len != 6) return;
-  
-  for (i=0; i<len; i++) {
-    if (i!=5)
-      sprintf((char *)(pDest+3*i), "%02d:", *(pSrc+i));
-    else
-      sprintf((char *)(pDest+3*i), "%02d", *(pSrc+i));
+  // проверка json
+  root = cJSON_CreateObject();
+  if (!root) return -1;
+  // Получаем значение в зависимости от типа параметра 'type'
+  switch (prm->xValue.type) {
+    case (BOOL):
+      sta = upvs_prm__get_b(prm, &bVar);
+      if (sta != -1) {
+        cJSON_AddItemToObject( root, (const char *)prm->pcName, 
+                               cJSON_CreateBool(bVar) );
+      }
+    break;
+    case (INT32):
+      sta = upvs_prm__get_sl(prm, &slVar);
+      if (sta != -1) {
+        cJSON_AddItemToObject( root, (const char *)prm->pcName, 
+                               cJSON_CreateInteger(slVar) );
+      }
+    break;
+    case (FLOAT):
+      sta = upvs_prm__get_f(prm, &fVar);
+      if (sta != -1) {
+        cJSON_AddItemToObject( root, (const char *)prm->pcName, 
+                               cJSON_CreateFloat(fVar) );
+      }
+    break;
+    case (STRING):
+      cJSON_AddItemToObject( root, (const char *)prm->pcName, 
+        cJSON_CreateString((const char*)param->xValue.mag.ac) );
+    break;
+    case (DATETIME):
+      //FIXME
+    break;
+    default:
+			goto errexit;
+    break;
   }
+  // После чего формируем json-строку { "some_key": some_value } сразу во
+  // внешний буфер
+  rc = cJSON_PrintPreallocated(root, (char *)pValue, sizeof(pValue), false);
+  if (!rc) goto errexit;
+  
+  // фрмируем pPath и копируем во внешний буфер
+  // pcTitle
+  strcat((char *)pPath, (const char *)prm->pcTitle);
+  idx = strlen((const char *)pPath);
+  pPath[idx] = '/'; pPath[idx+1] = '\0';
+  //
+  strcat((char *)pPath, (const char *)"CSC");
+  idx = strlen((const char *)pPath);
+  pPath[idx] = '/'; pPath[idx+1] = '\0';
+  // pcTitle
+  strcat((char *)pPath, (const char *)prm->pcSrvc);
+  idx = strlen((const char *)pPath);
+  pPath[idx] = '/'; pPath[idx+1] = '\0';
+  // pcTitle
+  strcat((char *)pPath, (const char *)prm->pcName);
+  
+  cJSON_Delete(root);
+  
+  return 0;
+  
+  errexit:
+  DBG_PRINT( NET_DEBUG, ("errexit, in '%s' /UPVS/upvs_clt.c:%d\r\n", 
+    __FUNCTION__, __LINE__) );
+  if (!root)
+    cJSON_Delete(root);
+  return -1;
 }
 
 /**	----------------------------------------------------------------------------
@@ -195,6 +252,49 @@ int
   return -1;
 }
 
+// Вспомогательные функции
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+void
+  upvs_clt__set_sernum(u8_t *pDest, ser_num_t *px) {
+/*----------------------------------------------------------------------------*/  
+  u8_t buf[6];
+  
+  if (!pDest || !px) return;
+  
+  // порядковый номер
+  sprintf((char *)(pDest), "%03d", px->Digit);
+  // текстовая вставка
+  strcat((char *)pDest, pcText);
+  // месяц произ-ва
+  sprintf((char *)(buf), "%02d", px->Month);
+  strcat((char *)pDest, (const char *)buf);
+  // год произ-ва
+  sprintf((char *)(buf), "%04d", px->Year);
+  strcat((char *)pDest, (const char *)buf);
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+void
+  upvs_prm__set_mac(u8_t *pDest, u8_t *pSrc, u32_t len) {
+/*----------------------------------------------------------------------------*/  
+  u8_t i;
+  
+  if (!pDest || !pSrc) return;
+  if (len != 6) return;
+  
+  for (i=0; i<len; i++) {
+    if (i!=5)
+      sprintf((char *)(pDest+3*i), "%02d:", *(pSrc+i));
+    else
+      sprintf((char *)(pDest+3*i), "%02d", *(pSrc+i));
+  }
+}
+
+// Функции-обёртки (wrappers)
+
 /**	----------------------------------------------------------------------------
 	* @brief */
 bool
@@ -262,7 +362,8 @@ s32_t
   return 0;
 }
 
-// Функции, ограниченные областью видимости данного файла
+
+// Локальные (private) функции
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */

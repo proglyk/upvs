@@ -21,13 +21,18 @@ typedef struct {
   u8_t acBuf[20];
 } upvs_clt_t;
 
+// Функции создания, инициализации, удаления экземпляра упр. структуры
 void *upvs_clt__create(void);
 int   upvs_clt__init(upvs_clt_t *);
 void  upvs_clt__del(upvs_clt_t *);
+// Основные функции клиентской части
+int   upvs_clt__set( upvs_clt_t *, const u8_t *, u32_t, const u8_t *, u32_t  );
+s32_t upvs_clt__get_prm(upvs_clt_t *, u8_t *, u8_t *, u32_t);
+int   upvs_clt__get_err( upvs_clt_t *, u32_t, u8_t *, u8_t * );
+// Вспомогательные функции
 void  upvs_clt__set_sernum(u8_t *, ser_num_t *);
 void  upvs_clt__set_mac(u8_t *, u8_t *, u32_t);
-int   upvs_clt__set( upvs_clt_t *, const u8_t *, u32_t, const u8_t *, u32_t  );
-int   upvs_clt__get_err( upvs_clt_t *, u32_t, u8_t *, u8_t * );
+// Функции-обёртки (wrappers)
 bool  upvs_clt__is_err_new(upvs_clt_t *, u32_t);
 void  upvs_clt__set_err_new(upvs_clt_t *, u32_t, bool);
 bool  upvs_clt__is_err_act(upvs_clt_t *, u32_t);
