@@ -3,11 +3,10 @@
 #include <string.h>
 
 struct upvs_prm_st {
-  prm_t *paxList;
+  prm_t axList[UPVS_PRM_LIST_LENGHT];
 };
 
-//const prm_t axOriginList[UPVS_PARAM_LIST_LEN];
-prm_t axOriginList[UPVS_PARAM_LIST_LEN];
+extern const prm_t axConstList[UPVS_PRM_LIST_LENGHT];
 
 // Функции записи в поле "значение" параметра
 static s32_t set(value_t *, value_ptr_t *, bool);
@@ -45,8 +44,8 @@ void *
   upvs_prm_t *self = malloc(sizeof(upvs_prm_t));
   if (!self) return NULL;
   
-  self->paxList = malloc(UPVS_PARAM_LIST_LEN * sizeof(prm_t));
-  if (!self->paxList) return NULL;
+  //self->paxList = malloc(UPVS_PRM_LIST_LENGHT * sizeof(prm_t));
+  //if (!self->paxList) return NULL;
   
   return (void *)self;
 }
@@ -60,31 +59,25 @@ int
   
   if (!self) return -1;
   
-  // FIXME убрать после доб upvs_param_list.c
-  memset((void *)axOriginList, 0, UPVS_PARAM_LIST_LEN * sizeof(prm_t));
-  
-  for (i=0; i<UPVS_PARAM_LIST_LEN; i++) {
-    memcpy( (void *)(self->paxList+i),       // dest в области .heap
-            (const void *)&axOriginList[i], // src в области .data
+  // копируем список параметров из const в области .code в var в .heap
+  for (i=0; i<UPVS_PRM_LIST_LENGHT; i++) {
+    memcpy( (void *)&(self->axList[i]),       // dest в области .heap
+            (const void *)&axConstList[i], // src в области .data
             sizeof(prm_t) );              // size = n*sizeof(struct)
   }
-  
-  // копируем список параметров из переменной в области .data в .heap
-  // memcpy( (void *)self->axList,         // dest в области .heap
-          // (const void *)axOriginList,   // src в области .data
-          // sizeof(axOriginList) );       // size = n*sizeof(struct)
+
   // vsp
-  upvs_prm__set_type(self->paxList[6].xValue.mag.ac, 1); // state
+  upvs_prm__set_type(self->axList[6].xValue.mag.ac, 1); // state
   // nsp
-  upvs_prm__set_type(self->paxList[16].xValue.mag.ac, 1); // state
+  upvs_prm__set_type(self->axList[16].xValue.mag.ac, 1); // state
   // ch1
-  upvs_prm__set_type(self->paxList[28].xValue.mag.ac, 1); // state
+  upvs_prm__set_type(self->axList[28].xValue.mag.ac, 1); // state
   // ch2
-  upvs_prm__set_type(self->paxList[37].xValue.mag.ac, 1); // state
+  upvs_prm__set_type(self->axList[37].xValue.mag.ac, 1); // state
   // ch3
-  upvs_prm__set_type(self->paxList[45].xValue.mag.ac, 1); // state
+  upvs_prm__set_type(self->axList[45].xValue.mag.ac, 1); // state
   // ch4
-  upvs_prm__set_type(self->paxList[52].xValue.mag.ac, 1); // state
+  upvs_prm__set_type(self->axList[52].xValue.mag.ac, 1); // state
   
   return 0;
 }
@@ -94,11 +87,7 @@ int
 void
   upvs_prm__del(upvs_prm_t *self) {
 /*----------------------------------------------------------------------------*/
-  if (!self) return;
-  if (!self->paxList) return;
-
-  free(self->paxList);
-  free(self);
+  if (self) free(self);
 }
 
 /**	----------------------------------------------------------------------------
@@ -107,9 +96,9 @@ prm_t *
   upvs_prm__get_item(upvs_prm_t *self, u32_t idx) {
 /*----------------------------------------------------------------------------*/
   if (!self) return NULL;
-  if (idx >= UPVS_PARAM_LIST_LEN) return NULL;
+  if (idx >= UPVS_PRM_LIST_LENGHT) return NULL;
   
-  return &(self->paxList[idx]);
+  return &(self->axList[idx]);
 }
 
 /**	----------------------------------------------------------------------------
@@ -127,16 +116,16 @@ int
   do {
     // В случае совпадания полного пути:
     // FIXME
-    if (!strcmp( (const char *)self->paxList[i].pcTopic,
+    if (!strcmp( (const char *)self->axList[i].pcTopic,
                  (const char *)psrc->pcTopic ))
     {
       // Проверяем соответствие имени в полях ключа и полного пути...
       //if (strcmp(px[i].pcName, (const char *)psrc->pcName)) return -1;
       // ... и записываем новое значение.
-      return set( &(self->paxList[i].xValue), &(psrc->xValue), changes );
+      return set( &(self->axList[i].xValue), &(psrc->xValue), changes );
     }
     i++;
-  } while (self->paxList[i].pcName); //FIXME было pcTopic
+  } while (self->axList[i].pcName); //FIXME было pcTopic
 
   return -1;
 }

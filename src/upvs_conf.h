@@ -1,7 +1,7 @@
 #ifndef _UPVS_CONF_H_
 #define _UPVS_CONF_H_
 
-#define UPVS_PARAM_LIST_LEN             72U
+#define UPVS_PRM_LIST_LENGHT            72U
 
 #define UPVS_PARAM_VALUE_SIZE           64U
 #define UPVS_TOPICPATH_SIZE             64U
