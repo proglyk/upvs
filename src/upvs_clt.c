@@ -109,6 +109,27 @@ void
 }
 
 /**	----------------------------------------------------------------------------
+	* @brief ???
+  * @param pDest: ???
+	* @param code: ???
+	* @retval ??? */
+void
+  upvs_prm__set_mac(u8_t *pDest, u8_t *pSrc, u32_t len) {
+/*----------------------------------------------------------------------------*/  
+  u8_t i;
+  
+  if (!pDest || !pSrc) return;
+  if (len != 6) return;
+  
+  for (i=0; i<len; i++) {
+    if (i!=5)
+      sprintf((char *)(pDest+3*i), "%02d:", *(pSrc+i));
+    else
+      sprintf((char *)(pDest+3*i), "%02d", *(pSrc+i));
+  }
+}
+
+/**	----------------------------------------------------------------------------
 	* @brief ??? */
 int
   upvs_clt__get_err( upvs_clt_t *self, u32_t idx, u8_t *path, u8_t *desc) {
