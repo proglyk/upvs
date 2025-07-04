@@ -7,7 +7,7 @@
 // привЯзки
 extern Network xNetwork;
 
-static void MqttMessageArrived(MessageData* msg);
+static void MqttMessageArrived(MessageData* msg, void *pld);
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
@@ -39,7 +39,7 @@ int
   xNetwork.socket = sock;
   MQTTClientInit( &(self->xControl), &xNetwork, 1000,
                   self->ucSndBuf, sizeof(self->ucSndBuf),
-                  self->ucRcvBuf, sizeof(self->ucRcvBuf) );
+                  self->ucRcvBuf, sizeof(self->ucRcvBuf), (void *)self );
   
   // запуск еще одной задачи
   rc = MQTTStartTask(&(self->xControl));
@@ -112,24 +112,23 @@ void
 	* @brief ???
 	* @retval Статус выполнения */
 static void
-	MqttMessageArrived( MessageData* msg ) {
+	MqttMessageArrived( MessageData* msg, void *pld ) {
 /*----------------------------------------------------------------------------*/
-  static u8_t acStrTemp[UPVS_TOPICPATH_SIZE];
+  mqtt_clt_t *self = (mqtt_clt_t *)pld;
+  if (!self) return;
   
   // Копируем топик лишь для того, чтобы привести его в 'строковый' вид
   // с null-терминальным символом (необходимо для функций из <string.h>)
-  memcpy( (void *)acStrTemp, 
+  memcpy( (void *)self->acStrTemp, 
           (const void *)msg->topicName->lenstring.data,
           msg->topicName->lenstring.len);
-  acStrTemp[msg->topicName->lenstring.len] = '\0';
+  self->acStrTemp[msg->topicName->lenstring.len] = '\0';
   // вызов функции записи
-  /*upvs_clt__set( (const u8_t *)acStrTemp,
+  upvs_clt__set( self->pxUpvs, (const u8_t *)self->acStrTemp,
                  msg->topicName->lenstring.len, 
                  (const u8_t *)msg->message->payload,
-                 msg->message->payloadlen );*/
+                 msg->message->payloadlen );
 }
-
-//s32_t	upvs_mqtt_clt__send( mqtt_clt_t *, const u8_t *, u32_t );
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
