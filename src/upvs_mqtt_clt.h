@@ -22,6 +22,7 @@ typedef struct {
   upvs_clt_t  *pxUpvs;           // 
   // send_ptr_t   psSendCb;          //
   // void        *pvCtx;           //  в кач-ве payload исп. "родитель" ctx_t
+  u8_t acStrTemp[UPVS_TOPICPATH_SIZE];
 } mqtt_clt_t;
 
 void *upvs_mqtt_clt__create(void);
