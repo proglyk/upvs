@@ -97,7 +97,7 @@ s32_t
   upvs_clt__get_prm( upvs_clt_t *self, u8_t *pPath, u8_t *pValue, u32_t idx ) {
 /*----------------------------------------------------------------------------*/
   bool rc;
-  int idx;
+  //int idx;
   s32_t sta;
   cJSON* root = NULL;
   param_t *prm;
@@ -144,7 +144,7 @@ s32_t
     break;
     case (STRING):
       cJSON_AddItemToObject( root, (const char *)prm->pcName, 
-        cJSON_CreateString((const char*)param->xValue.mag.ac) );
+        cJSON_CreateString((const char*)prm->xValue.mag.ac) );
     break;
     case (DATETIME):
       //FIXME
@@ -189,7 +189,7 @@ s32_t
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 int
-  upvs_clt__get_err( upvs_clt_t *self, u32_t idx, u8_t *path, u8_t *desc) {
+  upvs_clt__get_err( upvs_clt_t *self, u8_t *path, u8_t *desc, u32_t idx) {
 /*----------------------------------------------------------------------------*/
   cJSON* root = NULL;
   char* jsonstr = NULL;
@@ -278,7 +278,7 @@ void
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 void
-  upvs_prm__set_mac(u8_t *pDest, u8_t *pSrc, u32_t len) {
+  upvs_clt__set_mac(u8_t *pDest, u8_t *pSrc, u32_t len) {
 /*----------------------------------------------------------------------------*/  
   u8_t i;
   

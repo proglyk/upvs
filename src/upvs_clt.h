@@ -26,9 +26,9 @@ void *upvs_clt__create(void);
 int   upvs_clt__init(upvs_clt_t *);
 void  upvs_clt__del(upvs_clt_t *);
 // Основные функции клиентской части
-int   upvs_clt__set( upvs_clt_t *, const u8_t *, u32_t, const u8_t *, u32_t  );
+int   upvs_clt__set(upvs_clt_t *, const u8_t *, u32_t, const u8_t *, u32_t);
 s32_t upvs_clt__get_prm(upvs_clt_t *, u8_t *, u8_t *, u32_t);
-int   upvs_clt__get_err( upvs_clt_t *, u32_t, u8_t *, u8_t * );
+int   upvs_clt__get_err(upvs_clt_t *, u8_t *, u8_t *, u32_t);
 // Вспомогательные функции
 void  upvs_clt__set_sernum(u8_t *, ser_num_t *);
 void  upvs_clt__set_mac(u8_t *, u8_t *, u32_t);
