@@ -4,16 +4,20 @@
 #include <string.h>
 #include "dbg.h"
 
-// extern 
-//extern s32_t upvs_err__add_item(err_cell_t *, u32_t, bool, s32_t);
 
-// static
+// Локальные (private) функции
+
 static int param_set( upvs_srv_t *, parser_t *, const u8_t * );
 static int error_set( upvs_srv_t *, const u8_t * );
 static s32_t error_remove(upvs_srv_t *, s32_t);
 static s32_t error_insert(upvs_srv_t *, cJSON *root, s32_t);
 static s32_t error_update(upvs_srv_t *, s32_t idx, const u8_t *pBuf);
 static int pvs_value_typecast(struct cJSON *, value_ptr_t *);
+
+
+// Общедоступные (public) функции
+
+// Функции создания, инициализации, удаления экземпляра упр. структуры
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
@@ -54,6 +58,8 @@ void
   free(self);
 }
 
+// Основные функции серверной части
+
 /**	----------------------------------------------------------------------------
 	* @brief ???
 	* @retval Статус выполнения */
@@ -62,7 +68,7 @@ s32_t
                  u32_t value_len ) {
 /*----------------------------------------------------------------------------*/
   cJSON* root = NULL;
-  param_t *prm;
+  prm_t *prm;
   bool rc;
   s32_t sta;
   //
@@ -72,7 +78,7 @@ s32_t
    // проверка арг-ов
   if (!pPath || !pValue) return -1;
   // ук-тель на параметром с индексом item
-  //pax = (upvs_param_t *)(upvs_param__inst() + item);
+  //pax = (upvs_prm_t *)(upvs_param__inst() + item);
   prm = upvs_prm__get_item(self->pxPrm, item);
   if (!prm) return -1;
   // формируем json
@@ -155,9 +161,11 @@ int
   return rc;
 }
 
+// Функции-обёртки (wrappers)
+
 /**	----------------------------------------------------------------------------
 	* @brief */
-param_t *
+prm_t *
   upvs_srv__get_prm(upvs_srv_t *self, u32_t idx) {
 /*----------------------------------------------------------------------------*/
   if (!self) return NULL;
@@ -236,7 +244,7 @@ s32_t
 }
 
 
-// Функции, ограниченные областью видимости данного файла
+// Локальные (private) функции
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */

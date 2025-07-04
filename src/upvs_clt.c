@@ -100,8 +100,8 @@ s32_t
   //int idx;
   s32_t sta;
   cJSON* root = NULL;
-  param_t *prm;
-  //upvs_param_t *param = upvs_param__inst() + item;
+  prm_t *prm;
+  //upvs_prm_t *param = upvs_param__inst() + item;
   //
   bool bVar;
   s32_t slVar;
@@ -112,7 +112,7 @@ s32_t
   prm = upvs_prm__get_item(self->pxPrm, idx);
   // если запрошенный индекс больше размера массива
   // FIXME не знаю как получить размер массива параметров
-  //if (item > (sizeof(*ppsrc)/sizeof(upvs_param_t)))
+  //if (item > (sizeof(*ppsrc)/sizeof(upvs_prm_t)))
   //  return -1;
   //param = upvs_param__inst() + item;
   

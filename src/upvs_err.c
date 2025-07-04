@@ -715,10 +715,10 @@ func_help_1304_1404(u8_t *pcDest, u32_t status, const u8_t *pcSrc) {
     sprintf((char *)pcDest + strlen((const char *)pcDest), "%.1f", 2.0f);
   }
   else if (status & (1<<2)) {
-    sprintf((char *)pcDest + strlen((const char *)pcDest), "%.1f", 1.0f);
+    sprintf((char *)pcDest + strlen((const char *)pcDest), "%.1f", 1.5f);
   }
   else if (status & (1<<3)) {
-    sprintf((char *)pcDest + strlen((const char *)pcDest), "%.1f", 0.1f);
+    sprintf((char *)pcDest + strlen((const char *)pcDest), "%.1f", 1.0f);
   }
   strcpy((char *)pcDest + strlen((const char *)pcDest), (const char *)acEnd);
 

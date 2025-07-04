@@ -123,32 +123,32 @@ typedef struct {
   const u8_t *pcName;   // Имя параметра (ключ)
   const u8_t *pcTopic;  // Полный путь
   value_t xValue;       // Значение параметра
-} param_t;
+} prm_t;
 
 #define prm_get_item(ARG1, ARG2) upvs_prm__get_item(ARG1, ARG2)
 
 typedef struct {
-  param_t *paxList; //[UPVS_PARAM_LIST_LEN];
-} upvs_param_t;
+  prm_t *paxList; //[UPVS_PARAM_LIST_LEN];
+} upvs_prm_t;
 
 void *upvs_prm__create(void);
-int   upvs_prm__init(upvs_param_t *);
-void  upvs_prm__del(upvs_param_t *);
+int   upvs_prm__init(upvs_prm_t *);
+void  upvs_prm__del(upvs_prm_t *);
 // new
-param_t *upvs_prm__get_item(upvs_param_t *self, u32_t idx);
-int upvs_prm__set( upvs_param_t *, param_ptr_t *, bool );
+prm_t *upvs_prm__get_item(upvs_prm_t *self, u32_t idx);
+int upvs_prm__set( upvs_prm_t *, param_ptr_t *, bool );
 // set
-s32_t	upvs_prm__set_b(param_t *, bool, bool);
-s32_t	upvs_prm__set_sl(param_t *, s32_t, bool);
-s32_t	upvs_prm__set_f(param_t *, f32_t, bool);
-s32_t	upvs_prm__set_all(param_t *, bool, bool);
+s32_t	upvs_prm__set_b(prm_t *, bool, bool);
+s32_t	upvs_prm__set_sl(prm_t *, s32_t, bool);
+s32_t	upvs_prm__set_f(prm_t *, f32_t, bool);
+s32_t	upvs_prm__set_all(prm_t *, bool, bool);
 // get
-s32_t upvs_prm__get_b(param_t *, bool *);
-s32_t	upvs_prm__get_sl(param_t *, s32_t *);
-s32_t	upvs_prm__get_f(param_t *, f32_t *);
+s32_t upvs_prm__get_b(prm_t *, bool *);
+s32_t	upvs_prm__get_sl(prm_t *, s32_t *);
+s32_t	upvs_prm__get_f(prm_t *, f32_t *);
 // attributes
-void  upvs_prm__set_attr_new(param_t *, bool);
-bool  upvs_prm__get_attr_new(param_t *);
+void  upvs_prm__set_attr_new(prm_t *, bool);
+bool  upvs_prm__get_attr_new(prm_t *);
 // type decode
 u32_t upvs_prm__enc_type(const u8_t *);
 const char *upvs_prm__dec_type(u32_t);

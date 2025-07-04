@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-//const param_t axOriginList[UPVS_PARAM_LIST_LEN];
-param_t axOriginList[UPVS_PARAM_LIST_LEN];
+//const prm_t axOriginList[UPVS_PARAM_LIST_LEN];
+prm_t axOriginList[UPVS_PARAM_LIST_LEN];
 
 // Функции записи в поле "значение" параметра
 static s32_t set(value_t *, value_ptr_t *, bool);
@@ -38,10 +38,10 @@ static const char* pcTypeAb4 = "No battery";
 void *
   upvs_prm__create(void) {
 /*----------------------------------------------------------------------------*/
-  upvs_param_t *self = malloc(sizeof(upvs_param_t));
+  upvs_prm_t *self = malloc(sizeof(upvs_prm_t));
   if (!self) return NULL;
   
-  self->paxList = malloc(UPVS_PARAM_LIST_LEN * sizeof(param_t));
+  self->paxList = malloc(UPVS_PARAM_LIST_LEN * sizeof(prm_t));
   if (!self->paxList) return NULL;
   
   return (void *)self;
@@ -50,19 +50,19 @@ void *
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 int
-  upvs_prm__init(upvs_param_t *self) {
+  upvs_prm__init(upvs_prm_t *self) {
 /*----------------------------------------------------------------------------*/
   u32_t i;
   
   if (!self) return -1;
   
   // FIXME убрать после доб upvs_param_list.c
-  memset((void *)axOriginList, 0, UPVS_PARAM_LIST_LEN * sizeof(param_t));
+  memset((void *)axOriginList, 0, UPVS_PARAM_LIST_LEN * sizeof(prm_t));
   
   for (i=0; i<UPVS_PARAM_LIST_LEN; i++) {
     memcpy( (void *)(self->paxList+i),       // dest в области .heap
             (const void *)&axOriginList[i], // src в области .data
-            sizeof(param_t) );              // size = n*sizeof(struct)
+            sizeof(prm_t) );              // size = n*sizeof(struct)
   }
   
   // копируем список параметров из переменной в области .data в .heap
@@ -88,7 +88,7 @@ int
 /**	----------------------------------------------------------------------------
 	* @brief */
 void
-  upvs_prm__del(upvs_param_t *self) {
+  upvs_prm__del(upvs_prm_t *self) {
 /*----------------------------------------------------------------------------*/
   if (!self) return;
   if (!self->paxList) return;
@@ -99,8 +99,8 @@ void
 
 /**	----------------------------------------------------------------------------
 	* @brief */
-param_t *
-  upvs_prm__get_item(upvs_param_t *self, u32_t idx) {
+prm_t *
+  upvs_prm__get_item(upvs_prm_t *self, u32_t idx) {
 /*----------------------------------------------------------------------------*/
   if (!self) return NULL;
   if (idx >= UPVS_PARAM_LIST_LEN) return NULL;
@@ -111,10 +111,10 @@ param_t *
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 int
-  upvs_prm__set( upvs_param_t *self, param_ptr_t *psrc, bool changes ) {
+  upvs_prm__set( upvs_prm_t *self, param_ptr_t *psrc, bool changes ) {
 /*----------------------------------------------------------------------------*/
   int i=0;
-  //upvs_param_t *px = upvs_param__inst();
+  //upvs_prm_t *px = upvs_param__inst();
 
   // проверка
   if (!psrc) return -1;
@@ -140,7 +140,7 @@ int
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 s32_t
-	upvs_prm__set_b(param_t *ptr, bool var, bool changes) {
+	upvs_prm__set_b(prm_t *ptr, bool var, bool changes) {
 /*----------------------------------------------------------------------------*/
   if (!ptr) return -1;
   return set_b(&(ptr->xValue), var, changes);
@@ -149,7 +149,7 @@ s32_t
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 s32_t
-	upvs_prm__set_sl(param_t *ptr, s32_t var, bool changes) {
+	upvs_prm__set_sl(prm_t *ptr, s32_t var, bool changes) {
 /*----------------------------------------------------------------------------*/
   if (!ptr) return -1;
   return set_sl(&(ptr->xValue), var, changes);
@@ -158,7 +158,7 @@ s32_t
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 s32_t
-	upvs_prm__set_f(param_t *ptr, f32_t var, bool changes) {
+	upvs_prm__set_f(prm_t *ptr, f32_t var, bool changes) {
 /*----------------------------------------------------------------------------*/
   if (!ptr) return -1;
   return set_f(&(ptr->xValue), var, changes);
@@ -167,7 +167,7 @@ s32_t
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 s32_t
-	upvs_prm__set_all(param_t *ptr, bool var, bool changes) {
+	upvs_prm__set_all(prm_t *ptr, bool var, bool changes) {
 /*----------------------------------------------------------------------------*/
   if (!ptr) return -1;
   return set_all(&(ptr->xValue), var, changes);
@@ -176,7 +176,7 @@ s32_t
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 s32_t
-	upvs_prm__get_b(param_t *px, bool *parg) {
+	upvs_prm__get_b(prm_t *px, bool *parg) {
 /*----------------------------------------------------------------------------*/  
   // проверка аргументов
   if (!px) { *parg = false; return -1; }
@@ -189,7 +189,7 @@ s32_t
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 s32_t
-	upvs_prm__get_sl(param_t *px, s32_t *parg) {
+	upvs_prm__get_sl(prm_t *px, s32_t *parg) {
 /*----------------------------------------------------------------------------*/
 	// проверка аргументов
   if (!px) { *parg = 0; return -1; }
@@ -202,7 +202,7 @@ s32_t
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 s32_t
-	upvs_prm__get_f(param_t *px, f32_t *parg) {
+	upvs_prm__get_f(prm_t *px, f32_t *parg) {
 /*----------------------------------------------------------------------------*/
   // проверка аргументов
   if (!px) { *parg = 0.0f; return -1; }
@@ -215,7 +215,7 @@ s32_t
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 void
-	upvs_prm__set_attr_new(param_t *px, bool sta) {
+	upvs_prm__set_attr_new(prm_t *px, bool sta) {
 /*----------------------------------------------------------------------------*/
   if (!px) return;
   px->xValue.bNew = sta;
@@ -224,7 +224,7 @@ void
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 bool
-	upvs_prm__get_attr_new(param_t *px) {
+	upvs_prm__get_attr_new(prm_t *px) {
 /*----------------------------------------------------------------------------*/
   // проверка аргументов
   return px->xValue.bNew;

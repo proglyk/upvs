@@ -15,7 +15,7 @@ typedef struct {
 typedef struct {
   //param_ptr_t *pxParamPtrList
   bool bReqSendAll;
-  upvs_param_t *pxPrm;
+  upvs_prm_t *pxPrm;
   upvs_err_t   *pxErr;
   //upvs_errdb_cell_t axErrDb[ERRDB_LENGHT];
   u8_t acBuf[20];
