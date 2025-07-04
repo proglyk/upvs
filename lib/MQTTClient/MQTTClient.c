@@ -65,8 +65,9 @@ static int sendPacket(MQTTClient* c, int length, Timer* timer)
 }
 
 
-void MQTTClientInit(MQTTClient* c, Network* network, unsigned int command_timeout_ms,
-		unsigned char* sendbuf, size_t sendbuf_size, unsigned char* readbuf, size_t readbuf_size)
+void MQTTClientInit( MQTTClient* c, Network* network, unsigned int command_timeout_ms,
+                     unsigned char* sendbuf, size_t sendbuf_size, 
+                     unsigned char* readbuf, size_t readbuf_size, void* pld )
 {
     int i;
     c->ipstack = network;
@@ -83,6 +84,7 @@ void MQTTClientInit(MQTTClient* c, Network* network, unsigned int command_timeou
     c->ping_outstanding = 0;
     c->defaultMessageHandler = NULL;
 	  c->next_packetid = 1;
+    c->pld = pld;
     TimerInit(&c->last_sent);
     TimerInit(&c->last_received);
 #if defined(MQTT_TASK)
@@ -206,7 +208,7 @@ deliverMessage(MQTTClient* c, MQTTString* topicName, MQTTMessage* message) {
         if (c->messageHandlers[i].fp != NULL) {
           MessageData md;
           NewMessageData(&md, topicName, message);
-          c->messageHandlers[i].fp(&md);
+          c->messageHandlers[i].fp(&md, c->pld);
           rc = MQTT_SUCCESS;
         }
       }
@@ -216,7 +218,7 @@ deliverMessage(MQTTClient* c, MQTTString* topicName, MQTTMessage* message) {
   if (rc == MQTT_FAILURE && c->defaultMessageHandler != NULL) {
     MessageData md;
     NewMessageData(&md, topicName, message);
-    c->defaultMessageHandler(&md);
+    c->defaultMessageHandler(&md, c->pld);
     rc = MQTT_SUCCESS;
   }
 
@@ -249,7 +251,7 @@ int keepalive(MQTTClient* c)
             }
         }
     }
-//  äëÿ çàìåíû ðàñêîììåíòèòü öåëèêîì
+//  Ð´Ð»Ñ Ð·Ð°Ð¼ÐµÐ½Ñ‹ Ñ€Ð°ÑÐºÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð¸Ñ‚ÑŒ Ñ†ÐµÐ»Ð¸ÐºÐ¾Ð¼
 /*    if (TimerIsExpired(&c->last_sent) || TimerIsExpired(&c->last_received))
     {
 			Timer timer;
