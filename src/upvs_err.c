@@ -2,6 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct upvs_err_st {
+  // аварийные записи
+  err_item_t     axItems[UPVS_ERR_LIST_LENGHT];
+  // указатель на аварию в контексте текущего обмена по modbus tcp
+  u32_t          ulIdx;
+  upvs_err_buf_t xErrBuf;
+  upvs_errdesc_t const *paxDesc;
+};
+
 // Extern
 //extern upvs_errdesc_t const *pxErrdesc;
 extern const upvs_errdesc_t errdesc[];

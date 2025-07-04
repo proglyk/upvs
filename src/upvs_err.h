@@ -58,16 +58,7 @@ typedef struct {
   dyntext_fn_t pvDynHelp;
 } upvs_errdesc_t;
 
-typedef struct {
-  // аварийные записи
-  err_item_t     axItems[UPVS_ERR_LIST_LENGHT];
-  // указатель на аварию в контексте текущего обмена по modbus tcp
-  u32_t          ulIdx;
-  upvs_err_buf_t xErrBuf;
-  upvs_errdesc_t const *paxDesc;
-} upvs_err_t;
-
-
+typedef struct upvs_err_st upvs_err_t;
 
 void *upvs_err__create(void);
 int   upvs_err__init(upvs_err_t *);

@@ -4,6 +4,17 @@
 #include "MQTTInterface.h"
 #include "dbg.h"
 
+struct mqtt_clt_st {
+  //s32_t count;
+  //Network   *pxHooks;
+  MQTTClient xControl;
+  u8_t ucSndBuf[MQTT_BUFSIZE]; //mqtt send buffer
+  u8_t ucRcvBuf[MQTT_BUFSIZE]; //mqtt receive buffer
+  MQTTPacket_connectData xDataConn;
+  upvs_clt_t  *pxUpvs;           // 
+  u8_t acStrTemp[UPVS_TOPICPATH_SIZE];
+};
+
 // привЯзки
 extern Network xNetwork;
 
@@ -106,6 +117,14 @@ void
   // free(self->xData.rx.pcBuf);
   // free(self->xData.tx.pcBuf);
   free(self);
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief */
+upvs_clt_t *
+  upvs_mqtt_clt__clt_inst(mqtt_clt_t *self) {
+/*----------------------------------------------------------------------------*/
+  return self->pxUpvs ? self->pxUpvs : NULL;
 }
 
 /**	----------------------------------------------------------------------------

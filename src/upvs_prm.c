@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct upvs_prm_st {
+  prm_t *paxList;
+};
+
 //const prm_t axOriginList[UPVS_PARAM_LIST_LEN];
 prm_t axOriginList[UPVS_PARAM_LIST_LEN];
 

@@ -127,9 +127,7 @@ typedef struct {
 
 #define prm_get_item(ARG1, ARG2) upvs_prm__get_item(ARG1, ARG2)
 
-typedef struct {
-  prm_t *paxList; //[UPVS_PARAM_LIST_LEN];
-} upvs_prm_t;
+typedef struct upvs_prm_st upvs_prm_t;
 
 void *upvs_prm__create(void);
 int   upvs_prm__init(upvs_prm_t *);
