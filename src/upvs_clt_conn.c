@@ -11,10 +11,15 @@ typedef struct {
   s32_t slCountAlive;
   u32_t ulCountItem;
   u32_t ulCountNew;
-  u8_t acPath[UPVS_TOPICPATH_SIZE];
-  u8_t value[UPVS_VALUE_SIZE];
-  u8_t acError[UPVS_CLT_ERROR_SIZE];
+  u8_t  acPath[UPVS_TOPICPATH_SIZE];
+  u8_t  value[UPVS_VALUE_SIZE];
+  u8_t  acError[UPVS_CLT_ERROR_SIZE];
+  bool  bSrvConn;
 } ctx_t;
+
+
+extern void if_upvs__update(void);
+extern int if_upvs__check_err(void);
 
 // static
 // интерфейсные
@@ -55,7 +60,11 @@ static void *
   if (!ctx->pxMqtt) return NULL;
   
   // оставляем сокет в блокирующем режиме - для клента это не имеет значения
-  if (upvs_mqtt_clt__init(ctx->pxMqtt, pdata->slSock) < 0) return NULL;
+  if (upvs_mqtt_clt__init(ctx->pxMqtt, pdata->slSock) < 0) {
+    asm("nop");
+    return NULL;
+  }
+  //ctx->bSrvConn = true;
     
   //FIXME
   ctx->ulCountItem = UPVS_CLT_CNT_INIT; //27;
@@ -84,13 +93,15 @@ static signed long
   
   // проверка арг-тов
   if (!ctx) return -1;
-  
-  
-  // проверяем данные с обмена по CAN на наличие аварийных флагов
-  //if_upvs__check_err(pclt);
-  
   // используем mqtt для краткости
   mqtt = ctx->pxMqtt;
+  
+  // проверка на наличие соединения
+  if (!upvs_mqtt_clt__is_conntd(mqtt)) goto exit;
+  
+  // проверяем данные с обмена по CAN на наличие аварийных флагов
+  if_upvs__check_err();
+  
   // передаем очередной параметр
   for (u32_t i = 0; i < UPVS_ERR_LIST_LENGHT; i++) {
     if (upvs_clt__is_err_new(clt_inst(mqtt), i)) {
@@ -118,7 +129,7 @@ static signed long
   
   // забор даных с обмена по CAN
   if (ctx->ulCountNew == UPVS_CLT_CNT_INIT) {
-    // FIXME if_upvs__update(pparam); //upvs_param_clt__update(pparam);
+    if_upvs__update(); //upvs_param_clt__update(pparam);
   }
   // Проверка на наличие изменений в значениях параметров
   if (upvs_clt__get_prm_new(clt_inst(mqtt), ctx->ulCountNew)) {
@@ -135,7 +146,7 @@ static signed long
   // Проверка на наличие запроса 'get_all' со стороны брокера (сервера)
   if (clt_inst(mqtt)->bReqSendAll) {
     // опрос данных с CAN
-    // FIXME if_upvs__update(pparam);
+    if_upvs__update();
     //
     rc = publish_prm(ctx, ctx->ulCountItem);
     if (rc < 0) {
@@ -147,7 +158,7 @@ static signed long
         ctx->acPath, __FUNCTION__, __LINE__) );
     }
     // ставим флаг FIXME
-    //pctx->status |= STA_PUBLISHED;
+    //mqtt->ucSta |= STA_PUBLISHED;
     //считает только при наличии команды
     if (ctx->ulCountItem < UPVS_CLT_CNT_MAX) //FIXME
       ctx->ulCountItem += 1;
@@ -165,6 +176,10 @@ static signed long
   
 	vTaskDelay(250);
 	return 0;
+  
+  exit:
+  // выход в случае потери связи
+  return -1;
 }
 
 /**	----------------------------------------------------------------------------
@@ -223,7 +238,8 @@ static s32_t
   memset(ctx->acPath, '\0', sizeof(ctx->acPath));
   memset(ctx->value, '\0', sizeof(ctx->value));
   // по индексу idx получаем искомый парамтер и заполняем строки
-  rc = upvs_clt__get_prm(clt_inst(ctx->pxMqtt), ctx->acPath, ctx->value, idx);
+  rc = upvs_clt__get_prm(clt_inst(ctx->pxMqtt), ctx->acPath, ctx->value, 
+                         sizeof(ctx->value), idx);
   if (rc < 0) return -1;
   // Полученные имя топика и значение шлём (Publish) брокеру
   rc = upvs_mqtt_clt__send( ctx->pxMqtt, (const u8_t *)ctx->acPath, 
