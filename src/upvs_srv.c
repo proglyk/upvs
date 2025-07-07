@@ -14,6 +14,10 @@ static s32_t error_insert(upvs_srv_t *, cJSON *root, s32_t);
 static s32_t error_update(upvs_srv_t *, s32_t idx, const u8_t *pBuf);
 static int pvs_value_typecast(struct cJSON *, value_ptr_t *);
 
+// FIXME поменять на передачу через интерефейс net_if
+/* static */ extern void	upvs_created_cb(void *);
+/* static */ extern void	upvs_deleted_cb(void *);
+
 
 // Общедоступные (public) функции
 
@@ -32,6 +36,10 @@ void *
   
   self->pxErr = upvs_err__create();
   if (!self->pxErr) return NULL;
+  
+  // FIXME
+  upvs_created_cb((void *)self);
+  //if (self->pvCreated) self->pvCreated((void *)self);
   
   return (void *)self;
 }
@@ -55,6 +63,8 @@ void
   if (!self) return;
   upvs_prm__del(self->pxPrm);
   upvs_err__del(self->pxErr);
+  upvs_deleted_cb((void *)self);
+  //if (self->pvDeleted) self->pvDeleted((void *)NULL);
   free(self);
 }
 
@@ -64,8 +74,8 @@ void
 	* @brief ???
 	* @retval Статус выполнения */
 s32_t
-	upvs_srv__get( upvs_srv_t *self, u32_t item, u8_t *pPath, u8_t *pValue, 
-                 u32_t value_len ) {
+	upvs_srv__get( upvs_srv_t *self, u8_t *path, u8_t *value, u32_t value_len,
+                 u32_t idx ) {
 /*----------------------------------------------------------------------------*/
   cJSON* root = NULL;
   prm_t *prm;
@@ -76,10 +86,10 @@ s32_t
   float fVar;
   
    // проверка арг-ов
-  if (!pPath || !pValue) return -1;
+  if (!path || !value) return -1;
   // ук-тель на параметром с индексом item
   //pax = (upvs_prm_t *)(upvs_param__inst() + item);
-  prm = upvs_prm__get_item(self->pxPrm, item);
+  prm = upvs_prm__get_item(self->pxPrm, idx);
   if (!prm) return -1;
   // формируем json
   root = cJSON_CreateObject();
@@ -95,7 +105,7 @@ s32_t
                                cJSON_CreateBool(bVar) );
         // После чего формируем json-строку { "some_key": some_value } сразу во
         // внешний буфер
-        rc = cJSON_PrintPreallocated(root, (char *)pValue, value_len, false);
+        rc = cJSON_PrintPreallocated(root, (char *)value, value_len, false);
         if (!rc) goto errexit;
       }
     break;
@@ -107,12 +117,12 @@ s32_t
                                cJSON_CreateFloat(fVar) );
         // После чего формируем json-строку { "some_key": some_value } сразу во
         // внешний буфер
-        rc = cJSON_PrintPreallocated(root, (char *)pValue, value_len, false);
+        rc = cJSON_PrintPreallocated(root, (char *)value, value_len, false);
         if (!rc) goto errexit;
       }
     break;
     case (GETALL):
-      strcpy((char *)pValue, (const char *)prm->pcName);
+      strcpy((char *)value, (const char *)prm->pcName);
     break;
     case (DATETIME):
       //FIXME
@@ -123,7 +133,7 @@ s32_t
   }
 
   // pcTitle
-  strcpy((char *)pPath, (const char *)prm->pcTopic);
+  strcpy((char *)path, (const char *)prm->pcTopic);
   
 	//cJSON_Delete(root);
   return 0;
@@ -131,7 +141,7 @@ s32_t
   errexit:
   if (!root)
     cJSON_Delete(root);
-  return rc;
+  return -1;
 }
 
 /**	----------------------------------------------------------------------------
@@ -169,7 +179,7 @@ prm_t *
   upvs_srv__get_prm(upvs_srv_t *self, u32_t idx) {
 /*----------------------------------------------------------------------------*/
   if (!self) return NULL;
-  if (!self->bActive) return NULL;
+  //if (!self->bActive) return NULL;
   return upvs_prm__get_item(self->pxPrm, idx);
 }
 
@@ -179,7 +189,7 @@ s32_t
   upvs_srv__set_prm_b(upvs_srv_t *self, u32_t idx, bool var, bool ch) {
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
-  if (!self->bActive) return -1;
+  //if (!self->bActive) return -1;
   return (upvs_prm__set_b(upvs_prm__get_item(self->pxPrm, idx), var, ch));
 }
 
@@ -189,7 +199,7 @@ s32_t
   upvs_srv__set_prm_sl(upvs_srv_t *self, u32_t idx, s32_t var, bool ch) {
 /*----------------------------------------------------------------------------*/
   if (!self) return -1; 
-  if (!self->bActive) return -1;
+  //if (!self->bActive) return -1;
   return (upvs_prm__set_sl(upvs_prm__get_item(self->pxPrm, idx), var, ch));
 }
 
@@ -199,7 +209,7 @@ s32_t
   upvs_srv__set_prm_f(upvs_srv_t *self, u32_t idx, f32_t var, bool ch) {
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
-  if (!self->bActive) return -1;
+  //if (!self->bActive) return -1;
   return (upvs_prm__set_f(upvs_prm__get_item(self->pxPrm, idx), var, ch));
 }
 
@@ -209,7 +219,7 @@ s32_t
   upvs_srv__set_prm_all(upvs_srv_t *self, u32_t idx, bool var, bool ch) {
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
-  if (!self->bActive) return -1;
+  //if (!self->bActive) return -1;
   return (upvs_prm__set_all(upvs_prm__get_item(self->pxPrm, idx), var, ch));
 }
 
@@ -219,7 +229,7 @@ s32_t
   upvs_srv__get_prm_b(upvs_srv_t *self, u32_t idx, bool *parg) {
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
-  if (!self->bActive) return -1;
+  //if (!self->bActive) return -1;
   return (upvs_prm__get_b(upvs_prm__get_item(self->pxPrm, idx), parg));
 }
 
@@ -229,7 +239,7 @@ s32_t
   upvs_srv__get_prm_sl(upvs_srv_t *self, u32_t idx, s32_t *parg) {
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
-  if (!self->bActive) return -1;
+  //if (!self->bActive) return -1;
   return (upvs_prm__get_sl(upvs_prm__get_item(self->pxPrm, idx), parg));
 }
 
@@ -239,8 +249,27 @@ s32_t
   upvs_srv__get_prm_f(upvs_srv_t *self, u32_t idx, f32_t *parg) {
 /*----------------------------------------------------------------------------*/
   if (!self) return -1;
-  if (!self->bActive) return -1;
+  //if (!self->bActive) return -1;
   return (upvs_prm__get_f(upvs_prm__get_item(self->pxPrm, idx), parg));
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief */
+bool
+  upvs_srv__is_prm_new(upvs_srv_t *self, u32_t idx) {
+/*----------------------------------------------------------------------------*/
+  return upvs_prm__get_attr_new(upvs_prm__get_item(self->pxPrm, idx));
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief */
+s32_t
+  upvs_srv__set_prm_new(upvs_srv_t *self, u32_t idx, bool var) {
+/*----------------------------------------------------------------------------*/
+  if (!self) return -1;
+  //if (!self->bActive) return -1; // TODO А нужно для клиента Active?
+  upvs_prm__set_attr_new(upvs_prm__get_item(self->pxPrm, idx), var);
+  return 0;
 }
 
 
