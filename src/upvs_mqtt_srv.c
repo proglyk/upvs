@@ -155,6 +155,25 @@ void
   free(self);
 }
 
+/**	----------------------------------------------------------------------------
+	* @brief */
+upvs_srv_t *
+  upvs_mqtt_srv__srv_inst(mqtt_srv_t *self) {
+/*----------------------------------------------------------------------------*/
+  return self->pxUpvs ? self->pxUpvs : NULL;
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+err_enum_t
+  upvs_mqtt_srv__send(mqtt_srv_t *self, const u8_t *path, const u8_t *desc) {
+/*----------------------------------------------------------------------------*/
+  if (!self) return ERR_VAL;
+  self->xData.tx.usCar = 0;
+  return outgoing_msg( self, MSG_PUBLISH, (u8_t)PUBLISH, 0,
+                (void*)path, strlen((const char *)path),
+                (void*)desc, strlen((const char *)desc));
+}
 
 // Функции, ограниченные областью видимости файла
 
