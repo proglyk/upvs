@@ -14,6 +14,9 @@ typedef struct {
   s32_t        slSock;  // Сокет подключения
   mqtt_srv_t  *pxMqtt;  // Экземпляр сервера MQTT
   xTimerHandle xTimer;  // программный таймер для исходящих сообщ
+  int          slCount; // сетчик для идентификации изменения параметра
+  u8_t acPath[UPVS_TOPICPATH_SIZE];
+  u8_t value[UPVS_VALUE_SIZE];
 } ctx_t;
 
 // интерфейсные
@@ -27,6 +30,7 @@ static err_enum_t	receive( s32_t, s32_t, u8_t *, u32_t, u32_t *,
                            struct sockaddr *, socklen_t * );
 static err_enum_t	transmit( s32_t, u8_t *, u32_t, u32_t *,
                             struct sockaddr *, socklen_t, void * );
+static s32_t publish_cmd(ctx_t *ctx, u32_t idx);
 
 // привязки
 net_if_fn_t xFnSrvUpvs = {
@@ -68,10 +72,9 @@ static void *
   }
   
   // Создаем таймер чтения внешних команд (со стороны ПК стенда)
-  //ctx->xTimer = xTimerCreate("timer", 10 / portTICK_RATE_MS, pdTRUE, 0,  
-  //  TimerTick, (void *)ctx);
-  
-  //xTimerStart(ctx->xTimer, 0);
+  ctx->xTimer = xTimerCreate("timer", 10 / portTICK_RATE_MS, pdTRUE, 0,  
+    TimerTick, (void *)ctx);
+  xTimerStart(ctx->xTimer, 0);
   
   DBG_PRINT( NET_DEBUG, ("Sess created (sock=%d), in '%s' /UPVS2/upvs_srv_conn.c:%d\r\n", 
     ctx->slSock, __FUNCTION__, __LINE__) );
@@ -138,10 +141,51 @@ static void
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
+static s32_t
+  publish_cmd(ctx_t *ctx, u32_t idx) {
+/*----------------------------------------------------------------------------*/
+  // готовим строки под размещение топика и значения параметра
+  memset(ctx->acPath, '\0', sizeof(ctx->acPath));
+  memset(ctx->value, '\0', sizeof(ctx->value));
+
+  // по индексу idx получаем искомый парамтер и заполняем строки
+  s32_t rc = upvs_srv__get(srv_inst(ctx->pxMqtt), ctx->acPath, ctx->value, 
+                           sizeof(ctx->value), idx);
+  if (rc < 0) return -1;
+  // Полученные имя топика и значение шлём (Publish) брокеру
+  err_enum_t err = upvs_mqtt_srv__send( ctx->pxMqtt, (const u8_t *)ctx->acPath,
+                                        (const u8_t *)ctx->value );
+  if (err != ERR_OK) return -1;
+  
+  return 0;
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
 static void
   TimerTick(xTimerHandle xTimer, void *argv) {
 /*----------------------------------------------------------------------------*/
+  ctx_t* ctx = (ctx_t *)argv;
   
+	//GPIOI->ODR ^= 1<<9;
+	
+  // бежим по списку параметров и ищем те, где стоит аттрибут New
+  if (upvs_srv__is_prm_new(srv_inst(ctx->pxMqtt), ctx->slCount)) {
+    //
+    s32_t rc = publish_cmd(ctx, ctx->slCount);
+    if (rc < 0) {
+      DBG_PRINT( NET_DEBUG, ("Can't publish cmd to %s, in '%s' /UPVS2/upvs_srv_conn.c:%d\r\n", 
+        ctx->acPath, __FUNCTION__, __LINE__) );
+    }
+    // отправили - затираем флаг
+    upvs_srv__set_prm_new(srv_inst(ctx->pxMqtt), ctx->slCount, false);
+  }
+  
+  // считает каждый раз при вызове TimerTick()
+  if (ctx->slCount < UPVS_SRV_CNT_MAX)
+    ctx->slCount += 1;
+  else
+    ctx->slCount = UPVS_SRV_CNT_INIT;
 }
 
 /**	----------------------------------------------------------------------------
