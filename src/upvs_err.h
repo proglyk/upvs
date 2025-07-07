@@ -76,6 +76,7 @@ void upvs_err__set_act(upvs_err_t *, u32_t, bool);
 void upvs_err__reset(upvs_err_t *, u32_t);
 s32_t upvs_err__get_code(upvs_err_t *, u32_t);
 #elif (defined SRV)
+u32_t upvs_err__get_idx(upvs_err_t *);
 err_item_t *upvs_err__next(upvs_err_t *);
 bool  upvs_err__is_help_equal(upvs_err_t *, s32_t , const u8_t *);
 s32_t upvs_err__get_item_idx(upvs_err_t *, s32_t);
