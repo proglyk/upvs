@@ -11,6 +11,8 @@ static const char* pcText = "АО";
 
 static int param_set( upvs_clt_t *, const u8_t *, u32_t, const u8_t * );
 static int typecast(struct cJSON *, value_ptr_t *);
+/* static */ extern void	upvs_created_cb(void *);
+/* static */ extern void	upvs_deleted_cb(void *);
 
 // Общедоступные (public) функции
 
@@ -27,6 +29,10 @@ void *
   if (!self->pxPrm) return NULL;
   self->pxErr = upvs_err__create();
   if (!self->pxErr) return NULL;
+  // извещаем других
+  upvs_created_cb((void *)self);
+  //if (self->pvCreated) self->pvCreated((void *)self);
+  
   return (void *)self;
 }
 
@@ -49,6 +55,9 @@ void
   if (!self) return;
   upvs_prm__del(self->pxPrm);
   upvs_err__del(self->pxErr);
+  // извещаем других
+  upvs_deleted_cb((void *)NULL);
+  //if (self->pvDeleted) self->pvDeleted((void *)NULL);
   free(self);
   self = NULL;
 }
@@ -94,7 +103,8 @@ int
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
 s32_t
-  upvs_clt__get_prm( upvs_clt_t *self, u8_t *pPath, u8_t *pValue, u32_t idx ) {
+  upvs_clt__get_prm( upvs_clt_t *self, u8_t *pPath, u8_t *pValue, u32_t value_len,
+                     u32_t idx ) {
 /*----------------------------------------------------------------------------*/
   bool rc;
   //int idx;
@@ -155,7 +165,7 @@ s32_t
   }
   // После чего формируем json-строку { "some_key": some_value } сразу во
   // внешний буфер
-  rc = cJSON_PrintPreallocated(root, (char *)pValue, sizeof(pValue), false);
+  rc = cJSON_PrintPreallocated(root, (char *)pValue, value_len, false);
   if (!rc) goto errexit;
   
   // фрмируем pPath и копируем во внешний буфер
