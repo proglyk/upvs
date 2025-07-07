@@ -272,5 +272,9 @@ void       *mqtt_srv__create(void);
 int         mqtt_srv__init(mqtt_srv_t *, send_ptr_t);
 err_enum_t  mqtt_srv__input(mqtt_srv_t *, u32_t);
 void        mqtt_srv__del(mqtt_srv_t *);
+err_enum_t  upvs_mqtt_srv__send(mqtt_srv_t *, const u8_t *, const u8_t *);
+// wrapper
+#define srv_inst(P) upvs_mqtt_srv__srv_inst(P)
+upvs_srv_t *upvs_mqtt_srv__srv_inst(mqtt_srv_t *self);
 
 #endif //_UPVS_MQTT_SRV_H_
