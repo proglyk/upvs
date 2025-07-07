@@ -13,12 +13,13 @@ struct mqtt_clt_st {
   MQTTPacket_connectData xDataConn;
   upvs_clt_t  *pxUpvs;           // 
   u8_t acStrTemp[UPVS_TOPICPATH_SIZE];
+  //u8_t  ucSta;
 };
 
 // привЯзки
 extern Network xNetwork;
 
-static void MqttMessageArrived(MessageData* msg, void *pld);
+static void received(MessageData* msg, void *pld);
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
@@ -54,10 +55,10 @@ int
   
   // запуск еще одной задачи
   rc = MQTTStartTask(&(self->xControl));
-  if(rc != MQTT_SUCCESS) {
-    DBG_PRINT( NET_DEBUG, ("Can't create MQTTStartTask, in '%s' /UPVS2/upvs_clt_sess.c:%d\r\n", 
-      __FUNCTION__, __LINE__) );
-    return NULL;
+  if (rc != MQTT_SUCCESS) {
+    //DBG_PRINT( NET_DEBUG, ("Can't create MQTTStartTask, in '%s' /UPVS2/upvs_clt_sess.c:%d\r\n", 
+    //  __FUNCTION__, __LINE__) );
+    return -1;
   }
   
     // Подключение с блокировкой
@@ -71,35 +72,36 @@ int
 	self->xDataConn.clientID.cstring = "STM32F4";
 	self->xDataConn.username.cstring = "client";
 	self->xDataConn.password.cstring = "public";
-	self->xDataConn.keepAliveInterval = 10;
+	self->xDataConn.keepAliveInterval = 5;
 	self->xDataConn.cleansession = 1;
   rc = MQTTConnect(&(self->xControl), &(self->xDataConn));
-  if(rc != MQTT_SUCCESS) {
-    DBG_PRINT( NET_DEBUG, ("Can't connect to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
-      __FUNCTION__, __LINE__) );
-    return NULL;
+  if (rc != MQTT_SUCCESS) {
+    //DBG_PRINT( NET_DEBUG, ("Can't connect to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
+    //  __FUNCTION__, __LINE__) );
+    return -1;
   }
-  // FIXME self->status |= STA_CONNECTED;
-  DBG_PRINT( NET_DEBUG, ("Connected to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
-    __FUNCTION__, __LINE__) ); 
+  // Ставим статус и выводим сообщение
+  //self->ucSta |= STA_CONNECTED;
+  //DBG_PRINT( NET_DEBUG, ("Connected to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
+  //  __FUNCTION__, __LINE__) ); 
   
   // Подписка
 	rc = MQTT_SUCCESS;
-	rc |= MQTTSubscribe(&(self->xControl), "action/CSC", QOS0, MqttMessageArrived);
-  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/reset_faults", QOS0, MqttMessageArrived);
-  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_1", QOS0, MqttMessageArrived);
-  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_1_frequency", QOS0, MqttMessageArrived);
-  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_2", QOS0, MqttMessageArrived);
-  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_3", QOS0, MqttMessageArrived);
-  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/datetime", QOS0, MqttMessageArrived);
+	rc |= MQTTSubscribe(&(self->xControl), "action/CSC", QOS0, received);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/reset_faults", QOS0, received);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_1", QOS0, received);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_1_frequency", QOS0, received);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_2", QOS0, received);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_3", QOS0, received);
+  rc |= MQTTSubscribe(&(self->xControl), "action/CSC/datetime", QOS0, received);
   if (rc != MQTT_SUCCESS) {
-    DBG_PRINT( NET_DEBUG, ("Can't subscribe to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
-      __FUNCTION__, __LINE__) );
-    return NULL;
+    //DBG_PRINT( NET_DEBUG, ("Can't subscribe to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
+    //  __FUNCTION__, __LINE__) );
+    return -1;
   }
-  // FIXME  pctx->status |= STA_SUBSCRIBED;
-  DBG_PRINT( NET_DEBUG, ("Subscribed to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
-    __FUNCTION__, __LINE__) );  
+  //self->ucSta |= STA_SUBSCRIBED;
+  //DBG_PRINT( NET_DEBUG, ("Subscribed to ..., in '%s' /UPVS2/upvs_mqtt_clt.c:%d\r\n", 
+  //  __FUNCTION__, __LINE__) );
   
   return 0;
 }
@@ -128,10 +130,18 @@ upvs_clt_t *
 }
 
 /**	----------------------------------------------------------------------------
+	* @brief */
+bool
+  upvs_mqtt_clt__is_conntd(mqtt_clt_t *self) {
+/*----------------------------------------------------------------------------*/
+  return self->xControl.isconnected;
+}
+
+/**	----------------------------------------------------------------------------
 	* @brief ???
 	* @retval Статус выполнения */
 static void
-	MqttMessageArrived( MessageData* msg, void *pld ) {
+	received( MessageData* msg, void *pld ) {
 /*----------------------------------------------------------------------------*/
   mqtt_clt_t *self = (mqtt_clt_t *)pld;
   if (!self) return;
