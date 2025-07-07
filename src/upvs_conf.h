@@ -24,7 +24,10 @@
 
 #define UPVS_SOCK_RCVTIME               10000U
 
-#define UPVS_CLT_CNT_INIT               (7UL)//(7UL)
-#define UPVS_CLT_CNT_MAX                (69UL)//(57UL)//(70UL)//(23UL)//(62UL)
+#define UPVS_CLT_CNT_INIT               7U
+#define UPVS_CLT_CNT_MAX                69U
+
+#define UPVS_SRV_CNT_INIT               0U
+#define UPVS_SRV_CNT_MAX                5U
 
 #endif //_UPVS_CONF_H_
