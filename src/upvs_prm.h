@@ -5,6 +5,9 @@
 #include "userint.h"
 #include <stdbool.h>
 #include <string.h>
+#if (defined SRV)
+#include "ipc.h"
+#endif // SRV
 
 #define UPVS_PRM__ADD_VAL_B(X, B)                         \
   do {                                                            \
@@ -151,5 +154,10 @@ bool  upvs_prm__get_attr_new(prm_t *);
 u32_t upvs_prm__enc_type(const u8_t *);
 const char *upvs_prm__dec_type(u32_t);
 s32_t upvs_prm__set_type(u8_t *, u32_t);
+#if (defined SRV)
+// Функции синхронизации доступа к разделяемым ресурсам
+s32_t  upvs_prm__lock(upvs_prm_t *);
+s32_t  upvs_prm__unlock(upvs_prm_t *);
+#endif // SRV
 
 #endif //_UPVS_PRM_H_

@@ -4,9 +4,15 @@
 
 struct upvs_prm_st {
   prm_t axList[UPVS_PRM_LIST_LENGHT];
+#if (defined SRV)
+  Mutex mutex;
+#endif // SRV
 };
 
 extern const prm_t axConstList[UPVS_PRM_LIST_LENGHT];
+
+
+// Локальные (private) функции
 
 // Функции записи в поле "значение" параметра
 static s32_t set(value_t *, value_ptr_t *, bool);
@@ -34,7 +40,10 @@ static const char* pcTypeAb2 = "56PzV385P 60A";
 static const char* pcTypeAb3 = "56PzV385P 40A";
 static const char* pcTypeAb4 = "No battery";
 
-// Функции, доступные извне
+
+// Общедоступные (public) функции
+
+// Функции создания, инициализации, удаления экземпляра объекта
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
@@ -43,10 +52,9 @@ void *
 /*----------------------------------------------------------------------------*/
   upvs_prm_t *self = malloc(sizeof(upvs_prm_t));
   if (!self) return NULL;
-  
-  //self->paxList = malloc(UPVS_PRM_LIST_LENGHT * sizeof(prm_t));
-  //if (!self->paxList) return NULL;
-  
+#if (defined SRV)
+  MutexCreate(&self->mutex);
+#endif // SRV
   return (void *)self;
 }
 
@@ -87,7 +95,11 @@ int
 void
   upvs_prm__del(upvs_prm_t *self) {
 /*----------------------------------------------------------------------------*/
-  if (self) free(self);
+  if (!self) return;
+#if (defined SRV)
+  MutexDel(&self->mutex);
+#endif // SRV
+  free(self); self = NULL;
 }
 
 /**	----------------------------------------------------------------------------
@@ -107,10 +119,16 @@ int
   upvs_prm__set( upvs_prm_t *self, param_ptr_t *psrc, bool changes ) {
 /*----------------------------------------------------------------------------*/
   int i=0;
+  s32_t rc = -1;
   //upvs_prm_t *px = upvs_param__inst();
 
   // проверка
   if (!psrc) return -1;
+
+#if (defined SRV)
+  // захватываем ресурс
+  MutexLock(&self->mutex);
+#endif // SRV
 
   // бегунок по элементам массива пока поле pcTopic не нуль
   do {
@@ -122,12 +140,19 @@ int
       // Проверяем соответствие имени в полях ключа и полного пути...
       //if (strcmp(px[i].pcName, (const char *)psrc->pcName)) return -1;
       // ... и записываем новое значение.
-      return set( &(self->axList[i].xValue), &(psrc->xValue), changes );
+      rc = set( &(self->axList[i].xValue), &(psrc->xValue), changes );
+      break;
+      //return set( &(self->axList[i].xValue), &(psrc->xValue), changes );
     }
     i++;
   } while (self->axList[i].pcName); //FIXME было pcTopic
 
-  return -1;
+#if (defined SRV)
+  // освобождаем ресурс
+  MutexUnlock(&self->mutex);
+#endif // SRV
+
+  return rc;
 }
 
 /**	----------------------------------------------------------------------------
@@ -308,7 +333,30 @@ s32_t
   return 0;
 }
 
+#if (defined SRV)
+// Функции синхронизации доступа к разделяемым ресурсам
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+s32_t
+	upvs_prm__lock(upvs_prm_t *self) {
+/*----------------------------------------------------------------------------*/
+  return MutexLock(&self->mutex);
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+s32_t
+	upvs_prm__unlock(upvs_prm_t *self) {
+/*----------------------------------------------------------------------------*/
+  return MutexUnlock(&self->mutex);
+}
+#endif // SRV
+
+
 // Функции, ограниченные областью видимости данного файла
+
+// Функции записи в поле "значение" параметра
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
