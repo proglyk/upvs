@@ -4,25 +4,31 @@
 #include "MQTTInterface.h"
 #include "dbg.h"
 
+// Определение типов
+
+// Упр. структура
 struct mqtt_clt_st {
-  //s32_t count;
-  //Network   *pxHooks;
   MQTTClient xControl;
-  u8_t ucSndBuf[MQTT_BUFSIZE]; //mqtt send buffer
-  u8_t ucRcvBuf[MQTT_BUFSIZE]; //mqtt receive buffer
+  u8_t       ucSndBuf[MQTT_BUFSIZE]; // send buffer
+  u8_t       ucRcvBuf[MQTT_BUFSIZE]; // receive buffer
   MQTTPacket_connectData xDataConn;
-  upvs_clt_t  *pxUpvs;           // 
-  u8_t acStrTemp[UPVS_TOPICPATH_SIZE];
-  //u8_t  ucSta;
+  upvs_clt_t *pxUpvs;           // 
+  u8_t       acStrTemp[UPVS_TOPICPATH_SIZE];
 };
 
-// привЯзки
+// Переменные и константы
+
+// Интерфейс для MQTTClient
 extern Network xNetwork;
 
 static void received(MessageData* msg, void *pld);
 
+// Определения общедоступных (public) функций
+
+// Создание, инициализация, удаление экземпляра упр. структуры
+
 /**	----------------------------------------------------------------------------
-	* @brief ??? */
+	* @brief Создание экземпляра объекта 'mqtt_clt_t' в памяти HEAP */
 void *
   upvs_mqtt_clt__create(void) {
 /*----------------------------------------------------------------------------*/
@@ -36,7 +42,7 @@ void *
 }
 
 /**	----------------------------------------------------------------------------
-	* @brief */
+	* @brief Инициализация */
 int
   upvs_mqtt_clt__init(mqtt_clt_t *self, s32_t sock) {
 /*----------------------------------------------------------------------------*/
@@ -121,6 +127,26 @@ void
   free(self);
 }
 
+// Передача по сети
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+s32_t
+  upvs_mqtt_clt__send(mqtt_clt_t *self, const u8_t *path, const u8_t *desc) {
+/*----------------------------------------------------------------------------*/
+  MQTTMessage message;
+  
+  // Берем имя топика и шлём (Publish) брокеру полученное сообщение
+  message.qos = QOS1;
+  message.payload = (void*)desc;
+  message.payloadlen = strlen((const char *)desc);
+  int ret = MQTTPublish(&self->xControl, (const char *)path, &message);
+  if (ret != MQTT_SUCCESS) return -1;
+  return 0;
+}
+
+// Вспомогательные
+
 /**	----------------------------------------------------------------------------
 	* @brief */
 upvs_clt_t *
@@ -136,6 +162,8 @@ bool
 /*----------------------------------------------------------------------------*/
   return self->xControl.isconnected;
 }
+
+// Определения локальных (private) функций
 
 /**	----------------------------------------------------------------------------
 	* @brief ???
@@ -158,20 +186,3 @@ static void
                  (const u8_t *)msg->message->payload,
                  msg->message->payloadlen );
 }
-
-/**	----------------------------------------------------------------------------
-	* @brief ??? */
-s32_t
-  upvs_mqtt_clt__send(mqtt_clt_t *self, const u8_t *path, const u8_t *desc) {
-/*----------------------------------------------------------------------------*/
-  MQTTMessage message;
-  
-  // Берем имя топика и шлём (Publish) брокеру полученное сообщение
-  message.qos = QOS1;
-  message.payload = (void*)desc;
-  message.payloadlen = strlen((const char *)desc);
-  int ret = MQTTPublish(&self->xControl, (const char *)path, &message);
-  if (ret != MQTT_SUCCESS) return -1;
-  return 0;
-}
-

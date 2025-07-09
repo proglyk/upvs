@@ -1,9 +1,11 @@
 #include "upvs_err.h"
-//#include "userint.h"
 #include "stdlib.h"
 
 #if (defined CLT)
 
+// Объявления общедоступных (public) функций
+
+// формирование текстового сообщения "Помощь ПЭМу"
 extern s32_t func_desc_1113_1307_1407_1506_1606( u8_t *, u32_t, const u8_t * );
 extern s32_t func_desc_1202(u8_t *, u32_t, const u8_t *);
 extern s32_t func_help_1103(u8_t *, u32_t, const u8_t *);
@@ -22,7 +24,10 @@ extern s32_t func_help_1401(u8_t *, u32_t, const u8_t *);
 extern s32_t func_help_1501(u8_t *, u32_t, const u8_t *);
 extern s32_t func_help_1601(u8_t *, u32_t, const u8_t *);
 
-/* static  */const upvs_errdesc_t errdesc[] = {
+// Переменные и константы
+
+// список аварий в соответствии с протоколом
+const upvs_errdesc_t errdesc[] = {
   // ВСП -----------------------------------------------------------------------
   // 0 ok
   {
@@ -605,6 +610,5 @@ extern s32_t func_help_1601(u8_t *, u32_t, const u8_t *);
     .pvDynHelp = NULL
   }
 };
-//upvs_errdesc_t const *pxErrdesc = &(errdesc[0]);
 
 #endif //CLT

@@ -4,10 +4,11 @@
 #include <string.h>
 #include "dbg.h"
 
+// Определение типов
+
+// Тип упр. структуры
 typedef struct {
-//s32_t        slSock;  // Сокет подключения
-  mqtt_clt_t *pxMqtt;  // Экземпляр сервера MQTT
-//xTimerHandle xTimer;  // программный таймер для исходящих сообщ
+  // локальные
   s32_t slCountAlive;
   u32_t ulCountItem;
   u32_t ulCountNew;
@@ -15,21 +16,26 @@ typedef struct {
   u8_t  value[UPVS_VALUE_SIZE];
   u8_t  acError[UPVS_CLT_ERROR_SIZE];
   bool  bSrvConn;
+  // взаимодействие с верхними уровнями
+  mqtt_clt_t *pxMqtt; // Экземпляр объекта (клиент MQTTClient)
 } ctx_t;
 
+// Объявления функций
 
+// Взаимодейтсвие с юриной частью
 extern void if_upvs__update(void);
-extern int if_upvs__check_err(void);
-
-// static
-// интерфейсные
+extern int  if_upvs__check_err(void);
+// Создание, инициализация и удаление экземпляра упр. структуры
 static void *conn_init(sess_init_cb_ptr_t, net_if_data_t *, void*);
 static signed long conn_do(void*);
-static void conn_del(sess_del_cb_ptr_t, void*);
+static void  conn_del(sess_del_cb_ptr_t, void*);
+// Функции передачи по сети
 static s32_t publish_err(ctx_t *, u32_t);
 static s32_t publish_prm(ctx_t *, u32_t);
 
-// привязки
+// Переменные
+
+// Реализация интерфейса net_if
 net_if_fn_t xFnCltUpvs = {
   .pvUpperInit =   (upper_init_ptr_t)NULL,
   .pvUpper =       (void *)NULL,
@@ -40,8 +46,9 @@ net_if_fn_t xFnCltUpvs = {
   .pvSessDelCb =   (sess_del_cb_ptr_t)NULL,
 };
 
+// Определения функций
 
-// Функции, доступные извне
+// Функции создания, инициализации и удаления экземпляра упр. структуры
 
 /**	----------------------------------------------------------------------------
 	* @brief Connection init */
@@ -206,6 +213,8 @@ static void
   upvs_mqtt_clt__del(ctx->pxMqtt);
   free(ctx);
 }
+
+// Функции передачи по сети
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */

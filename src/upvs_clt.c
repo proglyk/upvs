@@ -5,18 +5,22 @@
 #include "dbg.h"
 #include "cJSON.h"
 
+// Объявления функций
 
-// Константы
-static const char* pcText = "АО";
-
-static int param_set( upvs_clt_t *, const u8_t *, u32_t, const u8_t * );
-static int typecast(struct cJSON *, value_ptr_t *);
+// Обратная связь
 /* static */ extern void	upvs_created_cb(void *);
 /* static */ extern void	upvs_deleted_cb(void *);
+// Работа с параметрами
+static int param_set( upvs_clt_t *, const u8_t *, u32_t, const u8_t * );
+static int typecast(struct cJSON *, value_ptr_t *);
 
-// Общедоступные (public) функции
+// Переменные и константы
 
-// Функции создания, инициализации, удаления экземпляра упр. структуры
+static const char* pcText = "АО";
+
+// Определения общедоступных (public) функций
+
+// Создание, инициализация, удаление экземпляра упр. структуры
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
@@ -372,8 +376,9 @@ s32_t
   return 0;
 }
 
+// Определения локальных (private) функций
 
-// Локальные (private) функции
+// Работа с параметрами
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
