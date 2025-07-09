@@ -52,6 +52,7 @@ int
   if (!self) return -1;
   if (upvs_prm__init(self->pxPrm) < 0) return -1;
   if (upvs_err__init(self->pxErr) < 0) return -1;
+  self->bValid = true;
   return 0;
 }
 
@@ -61,11 +62,13 @@ void
   upvs_srv__del(upvs_srv_t *self) {
 /*----------------------------------------------------------------------------*/
   if (!self) return;
+  self->bValid = false;
   upvs_prm__del(self->pxPrm);
   upvs_err__del(self->pxErr);
   upvs_deleted_cb((void *)self);
+  //MutexDel(&self->mutex);
   //if (self->pvDeleted) self->pvDeleted((void *)NULL);
-  free(self);
+  free(self); self = NULL;
 }
 
 // Основные функции серверной части
@@ -87,13 +90,16 @@ s32_t
   
    // проверка арг-ов
   if (!path || !value) return -1;
-  // ук-тель на параметром с индексом item
-  //pax = (upvs_prm_t *)(upvs_param__inst() + item);
-  prm = upvs_prm__get_item(self->pxPrm, idx);
-  if (!prm) return -1;
+  
   // формируем json
   root = cJSON_CreateObject();
   if (!root) return -1;
+  // захватываем ресурс
+  upvs_srv__prm_lock(self);
+  
+  // ук-тель на параметр с индексом idx
+  prm = upvs_prm__get_item(self->pxPrm, idx);
+  if (!prm) return -1;
   
   // Получаем значение в зависимости от типа 'type' параметра 
   switch (prm->xValue.type) {
@@ -134,6 +140,8 @@ s32_t
 
   // pcTitle
   strcpy((char *)path, (const char *)prm->pcTopic);
+  // освобождаем ресурс
+  upvs_srv__prm_unlock(self);
   
 	//cJSON_Delete(root);
   return 0;
@@ -141,6 +149,8 @@ s32_t
   errexit:
   if (!root)
     cJSON_Delete(root);
+  // освобождаем ресурс
+  upvs_srv__prm_unlock(self);
   return -1;
 }
 
@@ -272,6 +282,40 @@ s32_t
   return 0;
 }
 
+// Функции синхронизации доступа к разделяемым ресурсам
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+s32_t
+	upvs_srv__prm_lock(upvs_srv_t *self) {
+/*----------------------------------------------------------------------------*/
+  return upvs_prm__lock(self->pxPrm);
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+void
+	upvs_srv__prm_unlock(upvs_srv_t *self) {
+/*----------------------------------------------------------------------------*/
+  upvs_prm__unlock(self->pxPrm);
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+s32_t
+	upvs_srv__err_lock(upvs_srv_t *self) {
+/*----------------------------------------------------------------------------*/
+  return upvs_err__lock(self->pxErr);
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+void
+	upvs_srv__err_unlock(upvs_srv_t *self) {
+/*----------------------------------------------------------------------------*/
+  upvs_err__unlock(self->pxErr);
+}
+
 
 // Локальные (private) функции
 
@@ -344,19 +388,22 @@ static int
 	if (strcmp((const void *)root->child->next->string, "status") != 0) 
 		goto exit;
 	active = (bool)root->child->next->valueint;
-
+  
+  // Блокируем
+  upvs_srv__err_lock(self);
+  
   idx = upvs_err__get_item_idx(self->pxErr, code);
 	// если авария с данными кодом и значением ранее были зафиксированы
   if (idx >= 0) {
 		// проверяем статус 'active' нового сообщения
 		if (active) {
       // берём и записываем "help" во временный буфер
-      if (!root->child->next->next) goto exit;
-      if (!root->child->next->next->next) goto exit;
-      if (!root->child->next->next->next->next) goto exit;
-      if (!root->child->next->next->next->next->next) goto exit;
+      if (!root->child->next->next) goto exit_mut;
+      if (!root->child->next->next->next) goto exit_mut;
+      if (!root->child->next->next->next->next) goto exit_mut;
+      if (!root->child->next->next->next->next->next) goto exit_mut;
       if (strcmp( (const void *)root->child->next->next->next->next->next->string,
-                  "help" ) != 0) goto exit;
+                  "help" ) != 0) goto exit_mut;
       //strcpy((void *)acBuffer, 
       //  (const void *)root->child->next->next->next->next->next->valuestring);
       //проверяем соответствие Help
@@ -384,11 +431,15 @@ static int
 			asm("nop");
 		}
 	}
-
+  
+  // Освобождаем mutex
+  upvs_srv__err_unlock(self);
   // удаляем объект
   cJSON_Delete(root);
   return rc;
   
+  exit_mut:
+  upvs_srv__err_unlock(self); // Освобождаем mutex
   exit:
   DBG_PRINT( NET_DEBUG, ("Error while parsing JSON, "      \
     "in '%s' /UPVS2/upvs_srv.c:%d\r\n", __FUNCTION__, __LINE__) );
@@ -485,7 +536,7 @@ static s32_t
   error_update(upvs_srv_t *self, s32_t idx, const u8_t *pBuf) {
 /*----------------------------------------------------------------------------*/
   err_item_t *item;
-
+  
   // берём ссылку на место под запись
   item = upvs_err__get_item(self->pxErr, idx);
   // записываем "help"
