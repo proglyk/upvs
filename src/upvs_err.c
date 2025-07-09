@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Определение типов
+
+// Упр. структура
 struct upvs_err_st {
   // аварийные записи
   err_item_t     axItems[UPVS_ERR_LIST_LENGHT];
@@ -11,14 +14,15 @@ struct upvs_err_st {
 #if (defined CLT)
   upvs_errdesc_t const *paxDesc;
 #endif
+#if (defined SRV)
+  Mutex mutex;
+#endif // SRV
 };
 
-#if (defined CLT)
-extern const upvs_errdesc_t errdesc[];
-#endif
+// Объявления общедоступных (public) функций
 
-// public
 #if   (defined CLT)
+// формирование текстового сообщения "Помощь ПЭМу"
 s32_t func_desc_1113_1307_1407_1506_1606( u8_t *, u32_t, const u8_t * );
 s32_t func_desc_1202(u8_t *, u32_t, const u8_t *);
 s32_t func_help_1103(u8_t *, u32_t, const u8_t *);
@@ -32,7 +36,6 @@ s32_t func_help_1504(u8_t *, u32_t, const u8_t *);
 s32_t func_help_1305_1405(u8_t *, u32_t, const u8_t *);
 s32_t func_help_1102(u8_t *, u32_t, const u8_t *);
 s32_t func_help_1107(u8_t *, u32_t, const u8_t *);
-static void func_bits_1102_1107(u8_t *, u32_t);
 s32_t func_help_1301(u8_t *, u32_t, const u8_t *);
 s32_t func_help_1401(u8_t *, u32_t, const u8_t *);
 s32_t func_help_1501(u8_t *, u32_t, const u8_t *);
@@ -41,20 +44,34 @@ s32_t func_help_1601(u8_t *, u32_t, const u8_t *);
 
 #endif // CLT or SRV
 
-// static
+// Объявления локальных (private) функций
+
 #if   (defined CLT)
+// редактирование списка аварий
 static s32_t insert_item(upvs_err_t *, u32_t, s32_t);
 static s32_t remove_item(upvs_err_t *, u32_t, s32_t);
+// ???
 static u8_t *get_desc(u8_t *, upvs_errdesc_t *, u32_t);
 static u8_t *get_help(u8_t *, upvs_errdesc_t *, u32_t);
+// формирование текстового сообщения "Помощь ПЭМу"
 static void func_bits_1301_1401_1501_1601( u8_t *, u32_t, const u8_t *, 
                                            const u8_t *, const u8_t *,
                                            const u8_t * );
+static void func_bits_1102_1107(u8_t *, u32_t);
 #elif (defined SRV)
 
 #endif // CLT or SRV
 
-// Функции, доступные извне
+// Переменные и константы
+
+#if (defined CLT)
+extern const upvs_errdesc_t errdesc[];
+#endif
+
+
+// Определения общедоступных (public) функций
+
+// Создание, инициализация, удаление экземпляра упр. структуры
 
 /**	----------------------------------------------------------------------------
 	* @brief ??? */
@@ -63,6 +80,9 @@ void *
 /*----------------------------------------------------------------------------*/
   upvs_err_t *self = malloc(sizeof(upvs_err_t));
   if (!self) return NULL;
+#if (defined SRV)
+  MutexCreate(&self->mutex);
+#endif // SRV
   return (void *)self;
 }
 
@@ -74,7 +94,7 @@ int
   if (!self) return -1;
   
 #if (defined CLT)
-  self->paxDesc = &(errdesc[0]); //pxErrdesc;
+  self->paxDesc = &(errdesc[0]);
 #endif
   return 0;
 }
@@ -85,8 +105,13 @@ void
   upvs_err__del(upvs_err_t *self) {
 /*----------------------------------------------------------------------------*/
   if (!self) return;
-  free(self);
+#if (defined SRV)
+  MutexDel(&self->mutex);
+#endif // SRV
+  free(self); self = NULL;
 }
+
+// Предоставление доступа к параметрам
 
 /**	----------------------------------------------------------------------------
 	* @brief */
@@ -111,6 +136,26 @@ s32_t
 	}
 	return -1;
 }
+
+#if (defined SRV)
+// Функции синхронизации доступа к разделяемым ресурсам
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+s32_t
+	upvs_err__lock(upvs_err_t *self) {
+/*----------------------------------------------------------------------------*/
+  return MutexLock(&self->mutex);
+}
+
+/**	----------------------------------------------------------------------------
+	* @brief ??? */
+s32_t
+	upvs_err__unlock(upvs_err_t *self) {
+/*----------------------------------------------------------------------------*/
+  return MutexUnlock(&self->mutex);
+}
+#endif // SRV
 
 #if (defined CLT)
 
@@ -819,7 +864,7 @@ func_help_1305_1405(u8_t *pcDest, u32_t status, const u8_t *pcSrc) {
 err_item_t *
   upvs_err__next(upvs_err_t *self) {
 /*----------------------------------------------------------------------------*/  
-  if (self->ulIdx >= UPVS_ERR_LIST_LENGHT) self->ulIdx = 0;
+  if (self->ulIdx >= (UPVS_ERR_LIST_LENGHT-1)) self->ulIdx = 0;
   else self->ulIdx += 1;
   return &(self->axItems[self->ulIdx]);
 }

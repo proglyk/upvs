@@ -5,6 +5,9 @@
 #include "upvs_conf.h"
 #include "userint.h"
 #include <stdbool.h>
+#if (defined SRV)
+#include "ipc.h"
+#endif // SRV
 
 typedef struct {
   u32_t ulCode;
@@ -60,12 +63,19 @@ typedef struct {
 
 typedef struct upvs_err_st upvs_err_t;
 
+// Объявления функций
+
+// Функции создания, инициализации и удаления экземпляра упр. структуры
 void *upvs_err__create(void);
 int   upvs_err__init(upvs_err_t *);
 void  upvs_err__del(upvs_err_t *);
+// Предоставление доступа к параметрам
 err_item_t *upvs_err__get_item(upvs_err_t *, u32_t);
 s32_t upvs_err__get_free_pos(upvs_err_t *);
-// public
+// Функции синхронизации доступа к разделяемым ресурсам
+s32_t  upvs_err__lock(upvs_err_t *);
+s32_t  upvs_err__unlock(upvs_err_t *);
+// ???
 #if   (defined CLT)
 s32_t upvs_err__check_state(upvs_err_t *, u32_t, bool, s32_t);
 upvs_err_buf_t *upvs_err__get_buf(upvs_err_t *, err_item_t *);
