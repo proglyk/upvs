@@ -1,6 +1,7 @@
 #ifndef _UPVS_SRV_H_
 #define _UPVS_SRV_H_
 
+#include "proj_conf.h"
 #include "upvs_conf.h"
 #include "upvs_prm.h"
 #include "upvs_err.h"

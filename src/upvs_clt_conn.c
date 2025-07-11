@@ -3,6 +3,7 @@
 #include "net_if.h"
 #include <string.h>
 #include "dbg.h"
+#include "rtc_usec.h"
 
 // Определение типов
 
@@ -68,7 +69,8 @@ static void *
   
   // оставляем сокет в блокирующем режиме - для клента это не имеет значения
   if (upvs_mqtt_clt__init(ctx->pxMqtt, pdata->slSock) < 0) {
-    asm("nop");
+    DBG_PRINT( NET_DEBUG, ("Can't connect to remote, in '%s' /UPVS2/upvs_clt_conn.c:%d\r\n", 
+     __FUNCTION__, __LINE__) );
     return NULL;
   }
   //ctx->bSrvConn = true;
@@ -79,8 +81,8 @@ static void *
   //pctx->state = CLT_BUSY;
   //pctx->error = false; //FIXME сейчас поле error дублируется в других местах
   
-  DBG_PRINT( NET_DEBUG, ("Conn created (sock=%d), in '%s' /UPVS2/upvs_clt_conn.c:%d\r\n", 
-                        pdata->slSock, __FUNCTION__, __LINE__) );
+  DBG_PRINT( NET_DEBUG, ("%s: Conn created (sock=%d), in '%s' /UPVS2/upvs_clt_conn.c:%d\r\n", 
+             rtc__print_str(), pdata->slSock, __FUNCTION__, __LINE__) );
   
   // возвращаем указат для дальнейшего исп.-ния
   return (void *)ctx;
@@ -134,7 +136,7 @@ static signed long
     }
   }
   
-  // забор даных с обмена по CAN
+  // забор данных с обмена по CAN
   if (ctx->ulCountNew == UPVS_CLT_CNT_INIT) {
     if_upvs__update(); //upvs_param_clt__update(pparam);
   }
@@ -150,7 +152,7 @@ static signed long
     upvs_clt__edit_prm_new(clt_inst(mqtt), ctx->ulCountNew, false);
   }
   
-  // Проверка на наличие запроса 'get_all' со стороны брокера (сервера)
+   // Проверка на наличие запроса 'get_all' со стороны брокера (сервера)
   if (clt_inst(mqtt)->bReqSendAll) {
     // опрос данных с CAN
     if_upvs__update();
@@ -174,7 +176,17 @@ static signed long
       ctx->ulCountItem = UPVS_CLT_CNT_INIT;
     }
   }
-
+  
+  // FIXME Test
+/*   if (ctx->ulCountNew == UPVS_CLT_CNT_INIT) {
+    rc = publish_prm(ctx, UPVS_CLT_CNT_INIT);
+    if (rc < 0) {
+      //DBG_PRINT( NET_DEBUG, ("Can't publish change to %s, in '%s' /UPVS2/upvs_clt_conn.c:%d\r\n", 
+      //  ctx->acPath, __FUNCTION__, __LINE__) );
+      DBG_PRINT( NET_DEBUG, ("%s: Can't publish change to %s, in '%s' /UPVS2/upvs_clt_conn.c:%d\r\n", 
+        rtc__print_str(), ctx->acPath, __FUNCTION__, __LINE__) );
+    }
+  } */
   // считает всегда
   if (ctx->ulCountNew < UPVS_CLT_CNT_MAX)
     ctx->ulCountNew += 1;

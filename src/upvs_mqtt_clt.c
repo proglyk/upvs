@@ -75,9 +75,9 @@ int
     sizeof(self->xDataConn.will.struct_id));
   self->xDataConn.willFlag = 0;
 	self->xDataConn.MQTTVersion = 4;
-	self->xDataConn.clientID.cstring = "STM32F4";
-	self->xDataConn.username.cstring = "client";
-	self->xDataConn.password.cstring = "public";
+	self->xDataConn.clientID.cstring = UPVS_MQTT_CLT_CLIENTID;
+	self->xDataConn.username.cstring = UPVS_MQTT_CLT_USERNAME;
+	self->xDataConn.password.cstring = UPVS_MQTT_CLT_PASSWORD;
 	self->xDataConn.keepAliveInterval = 5;
 	self->xDataConn.cleansession = 1;
   rc = MQTTConnect(&(self->xControl), &(self->xDataConn));
@@ -93,7 +93,7 @@ int
   
   // Подписка
 	rc = MQTT_SUCCESS;
-	rc |= MQTTSubscribe(&(self->xControl), "action/CSC", QOS0, received);
+ 	rc |= MQTTSubscribe(&(self->xControl), "action/CSC", QOS0, received);
   rc |= MQTTSubscribe(&(self->xControl), "action/CSC/reset_faults", QOS0, received);
   rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_1", QOS0, received);
   rc |= MQTTSubscribe(&(self->xControl), "action/CSC/channel_1_frequency", QOS0, received);
